@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createGuestGroup, createWedding, deleteWeddingPhoto, getAdminOverview, getGuestGroups, getImageUrl, getManagedPhotos, getMyWeddings, getPublicAudio, getWeddingContent, login, updateWeddingContent, uploadWeddingAudio, uploadWeddingDressCodeImage, uploadWeddingPhoto } from '../services/api'
+import { createAdminUser, createGuestGroup, createWedding, deleteAdminUser, deleteWeddingPhoto, getAdminOverview, getGuestGroups, getImageUrl, getManagedPhotos, getMyWeddings, getPublicAudio, getWeddingContent, login, updateWeddingContent, uploadWeddingAudio, uploadWeddingDressCodeImage, uploadWeddingPhoto } from '../services/api'
 
 const photoSections = [
   ['HERO', 'Portada'],
@@ -46,6 +46,11 @@ function AdminPage() {
   const [activeTab, setActiveTab] = useState('summary')
   const [newWedding, setNewWedding] = useState({ title: '', partnerOneName: '', partnerTwoName: '', weddingDate: '', venueName: '', venueAddress: '', maxRegisteredGuests: 1 })
   const [adminOverview, setAdminOverview] = useState(null)
+  const [viewMode, setViewMode] = useState('admin')
+  const [newCouple, setNewCouple] = useState({ fullName: '', email: '', password: '' })
+  const [creatingCouple, setCreatingCouple] = useState(false)
+  const [adminSuccess, setAdminSuccess] = useState('')
+  const [adminError, setAdminError] = useState('')
 
   useEffect(() => {
     if (token && role === 'ADMIN') getAdminOverview(token).then(setAdminOverview).catch(() => setError('No se pudo cargar el resumen administrativo.'))
@@ -179,6 +184,38 @@ function AdminPage() {
     }
   }
 
+  async function handleCreateCouple(event) {
+    event.preventDefault()
+    setAdminError('')
+    setAdminSuccess('')
+    setCreatingCouple(true)
+    try {
+      await createAdminUser({ ...newCouple, role: 'COUPLE' }, token)
+      setAdminSuccess(`¡Cuenta creada con éxito para "${newCouple.fullName}"! Ya pueden iniciar sesión con ${newCouple.email}.`)
+      setNewCouple({ fullName: '', email: '', password: '' })
+      const overview = await getAdminOverview(token)
+      setAdminOverview(overview)
+    } catch (err) {
+      setAdminError(err.response?.data?.message || 'Error al crear la cuenta de novios.')
+    } finally {
+      setCreatingCouple(false)
+    }
+  }
+
+  async function handleDeleteCouple(id, name) {
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar la cuenta de "${name}"?`)) return
+    setAdminError('')
+    setAdminSuccess('')
+    try {
+      await deleteAdminUser(id, token)
+      setAdminSuccess('Usuario eliminado correctamente.')
+      const overview = await getAdminOverview(token)
+      setAdminOverview(overview)
+    } catch (err) {
+      setAdminError(err.response?.data?.message || 'Error al eliminar usuario.')
+    }
+  }
+
   async function handleDeletePhoto(photoId) {
     if (!window.confirm('¿Eliminar esta foto de la galería?')) return
     try {
@@ -261,13 +298,170 @@ function AdminPage() {
     )
   }
 
-  if (role === 'ADMIN') {
-    return <main className="admin-page"><section className="admin-panel admin-support-panel"><p className="eyebrow">Administración global</p><h1>Centro de soporte</h1><p className="summary-section">Supervisa cuentas, bodas publicadas y enlaces para ayudar a los novios.</p><button className="secondary-button" type="button" onClick={handleLogout}>Cerrar sesión</button>{adminOverview && <><div className="summary-metrics"><article><strong>{adminOverview.userCount}</strong><span>Usuarios</span></article><article><strong>{adminOverview.weddingCount}</strong><span>Bodas</span></article><article><strong>{adminOverview.weddings.filter((wedding) => wedding.public).length}</strong><span>Invitaciones públicas</span></article></div><h2>Usuarios</h2><div className="support-list">{adminOverview.users.map((user) => <article key={user.id}><strong>{user.fullName}</strong><span>{user.email} · {user.role}</span></article>)}</div><h2>Bodas</h2><div className="support-list">{adminOverview.weddings.map((wedding) => <article key={wedding.id}><strong>{wedding.title}</strong><span>{wedding.ownerEmail} · /invitacion/{wedding.slug} · {wedding.public ? 'Pública' : 'Oculta'}</span></article>)}</div></>}</section></main>
+  if (role === 'ADMIN' && viewMode === 'admin') {
+    return (
+      <main className="admin-page">
+        <section className="admin-panel admin-support-panel">
+          <p className="eyebrow">Administración global</p>
+          <h1>Centro de soporte y parejas</h1>
+          <p className="summary-section">
+            Supervisa cuentas, registra los accesos para las parejas de novios y gestiona bodas.
+          </p>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', margin: '20px 0 28px' }}>
+            <button className="primary-button" type="button" onClick={() => setViewMode('couple')}>
+              Ir a Gestionar Bodas (Panel de Novios) →
+            </button>
+            <button className="secondary-button" type="button" onClick={handleLogout}>
+              Cerrar sesión
+            </button>
+          </div>
+
+          {adminSuccess && (
+            <p className="form-success" style={{ padding: '14px', background: '#eaf4ee', border: '1px solid #7fb3a8', color: '#2d6053', margin: '16px 0', borderRadius: '4px' }}>
+              {adminSuccess}
+            </p>
+          )}
+          {adminError && <p className="form-error" style={{ margin: '16px 0' }}>{adminError}</p>}
+
+          {adminOverview && (
+            <>
+              <div className="summary-metrics">
+                <article>
+                  <strong>{adminOverview.userCount}</strong>
+                  <span>Usuarios totales</span>
+                </article>
+                <article>
+                  <strong>{adminOverview.weddingCount}</strong>
+                  <span>Bodas registradas</span>
+                </article>
+                <article>
+                  <strong>{adminOverview.weddings.filter((wedding) => wedding.public).length}</strong>
+                  <span>Invitaciones públicas</span>
+                </article>
+              </div>
+
+              {/* Formulario para registrar novios */}
+              <div style={{ margin: '32px 0', padding: '24px', background: '#f4f1ea', border: '1px solid #d9e2df' }}>
+                <h2 style={{ margin: '0 0 6px', fontSize: '1.4rem' }}>+ Crear cuenta para pareja de novios</h2>
+                <p style={{ margin: '0 0 16px', color: '#68736f', fontSize: '0.85rem', lineHeight: '1.4' }}>
+                  Ingresa los datos de los novios. Con este correo y contraseña ellos podrán ingresar en este mismo enlace para gestionar su boda (invitados, fotos, itinerario y mesas).
+                </p>
+                <form onSubmit={handleCreateCouple} style={{ display: 'grid', gap: '12px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
+                    <label style={{ margin: 0 }}>
+                      Nombres de la pareja
+                      <input
+                        type="text"
+                        placeholder="Ej: Carlos y María"
+                        value={newCouple.fullName}
+                        onChange={(e) => setNewCouple({ ...newCouple, fullName: e.target.value })}
+                        required
+                      />
+                    </label>
+                    <label style={{ margin: 0 }}>
+                      Correo electrónico de acceso
+                      <input
+                        type="email"
+                        placeholder="carlosymaria@gmail.com"
+                        value={newCouple.email}
+                        onChange={(e) => setNewCouple({ ...newCouple, email: e.target.value })}
+                        required
+                      />
+                    </label>
+                    <label style={{ margin: 0 }}>
+                      Contraseña inicial
+                      <input
+                        type="password"
+                        placeholder="Mínimo 6 caracteres"
+                        value={newCouple.password}
+                        onChange={(e) => setNewCouple({ ...newCouple, password: e.target.value })}
+                        required
+                        minLength={6}
+                      />
+                    </label>
+                  </div>
+                  <div>
+                    <button className="primary-button" type="submit" disabled={creatingCouple} style={{ marginTop: '8px' }}>
+                      {creatingCouple ? 'Creando cuenta...' : '+ Registrar pareja de novios'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              <h2>Usuarios registrados ({adminOverview.users.length})</h2>
+              <div className="support-list">
+                {adminOverview.users.map((user) => (
+                  <article key={user.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                    <div>
+                      <strong style={{ fontSize: '1.05rem', display: 'block' }}>{user.fullName}</strong>
+                      <span style={{ display: 'inline-block', marginTop: '4px' }}>
+                        {user.email} ·{' '}
+                        <span style={{
+                          padding: '2px 8px',
+                          borderRadius: '4px',
+                          fontSize: '0.75rem',
+                          fontWeight: 'bold',
+                          background: user.role === 'ADMIN' ? '#d0e5e0' : '#ece4d4',
+                          color: user.role === 'ADMIN' ? '#275249' : '#695126',
+                        }}>
+                          {user.role === 'ADMIN' ? 'ADMINISTRADOR' : 'NOVIOS'}
+                        </span>
+                      </span>
+                    </div>
+                    {user.role !== 'ADMIN' && (
+                      <button
+                        className="remove-button"
+                        type="button"
+                        onClick={() => handleDeleteCouple(user.id, user.fullName)}
+                        style={{ alignSelf: 'center' }}
+                      >
+                        Eliminar cuenta
+                      </button>
+                    )}
+                  </article>
+                ))}
+              </div>
+
+              <h2>Bodas registradas ({adminOverview.weddings.length})</h2>
+              <div className="support-list">
+                {adminOverview.weddings.length === 0 ? (
+                  <p style={{ color: '#68736f', padding: '12px' }}>Aún no hay bodas creadas en el sistema.</p>
+                ) : (
+                  adminOverview.weddings.map((wedding) => (
+                    <article key={wedding.id}>
+                      <strong>{wedding.title}</strong>
+                      <span>
+                        Dueño: {wedding.ownerEmail} ·{' '}
+                        <a href={`/invitacion/${wedding.slug}`} target="_blank" rel="noopener noreferrer" style={{ color: '#628f85', textDecoration: 'underline' }}>
+                          Ver invitación pública (/invitacion/{wedding.slug})
+                        </a>
+                        {' '}· {wedding.public ? 'Pública' : 'Oculta'}
+                      </span>
+                    </article>
+                  ))
+                )}
+              </div>
+            </>
+          )}
+        </section>
+      </main>
+    )
   }
 
   return (
     <main className="admin-page">
       <section className="admin-panel">
+        {role === 'ADMIN' && (
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={() => setViewMode('admin')}
+            style={{ marginBottom: '18px', display: 'inline-block' }}
+          >
+            ← Volver a Centro de Administración
+          </button>
+        )}
         <p className="eyebrow">Panel de los novios</p>
         <h1>Gestionar invitación</h1>
         <button className="secondary-button" type="button" onClick={handleLogout}>Cerrar sesión</button>

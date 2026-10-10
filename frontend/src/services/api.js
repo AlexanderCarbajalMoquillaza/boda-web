@@ -154,4 +154,18 @@ export async function submitRsvp(slug, token, payload) {
   return response.data
 }
 
+export async function createAdminUser(userData, token) {
+  const response = await api.post('/admin/users', userData, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return response.data
+}
+
+export async function deleteAdminUser(userId, token) {
+  const response = await api.delete(`/admin/users/${userId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return response.data
+}
+
 export default api

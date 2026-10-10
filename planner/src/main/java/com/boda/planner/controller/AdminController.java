@@ -1,12 +1,16 @@
 package com.boda.planner.controller;
 
+import com.boda.planner.dto.CreateUserRequest;
+import com.boda.planner.exception.BusinessRuleException;
+import com.boda.planner.exception.ResourceNotFoundException;
+import com.boda.planner.model.AppUser;
 import com.boda.planner.repository.AppUserRepository;
 import com.boda.planner.repository.WeddingRepository;
+import jakarta.validation.Valid;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -16,10 +20,16 @@ import java.util.Map;
 public class AdminController {
     private final AppUserRepository userRepository;
     private final WeddingRepository weddingRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AdminController(AppUserRepository userRepository, WeddingRepository weddingRepository) {
+    public AdminController(
+            AppUserRepository userRepository,
+            WeddingRepository weddingRepository,
+            PasswordEncoder passwordEncoder
+    ) {
         this.userRepository = userRepository;
         this.weddingRepository = weddingRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @GetMapping("/overview")
@@ -34,6 +44,44 @@ public class AdminController {
         response.put("userCount", userRepository.count());
         response.put("weddingCount", weddingRepository.count());
         return response;
+    }
+
+    @PostMapping("/users")
+    public Map<String, Object> createUser(@Valid @RequestBody CreateUserRequest request, Authentication authentication) {
+        requireAdmin(authentication);
+        String normalizedEmail = request.getEmail().toLowerCase().trim();
+        if (userRepository.findByEmail(normalizedEmail).isPresent()) {
+            throw new BusinessRuleException("Ya existe una cuenta registrada con el correo " + normalizedEmail);
+        }
+
+        AppUser user = new AppUser();
+        user.setFullName(request.getFullName().trim());
+        user.setEmail(normalizedEmail);
+        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setRole(request.getRole() != null && !request.getRole().isBlank() ? request.getRole() : "COUPLE");
+
+        AppUser saved = userRepository.save(user);
+
+        return Map.of(
+                "id", saved.getId(),
+                "fullName", saved.getFullName(),
+                "email", saved.getEmail(),
+                "role", saved.getRole()
+        );
+    }
+
+    @DeleteMapping("/users/{id}")
+    public Map<String, String> deleteUser(@PathVariable Long id, Authentication authentication) {
+        requireAdmin(authentication);
+        AppUser user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+
+        if ("ADMIN".equalsIgnoreCase(user.getRole()) && user.getEmail().equalsIgnoreCase(authentication.getName())) {
+            throw new BusinessRuleException("No puedes eliminar tu propia cuenta de administrador");
+        }
+
+        userRepository.delete(user);
+        return Map.of("message", "Usuario eliminado correctamente");
     }
 
     private void requireAdmin(Authentication authentication) {
