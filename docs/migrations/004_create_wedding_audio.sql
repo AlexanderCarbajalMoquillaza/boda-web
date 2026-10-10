@@ -1,0 +1,10 @@
+CREATE TABLE wedding_audio (
+    id BIGSERIAL PRIMARY KEY,
+    wedding_id BIGINT NOT NULL UNIQUE,
+    audio_url VARCHAR(500) NOT NULL,
+    title VARCHAR(160),
+    is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_wedding_audio_wedding FOREIGN KEY (wedding_id) REFERENCES wedding(id) ON DELETE CASCADE
+);

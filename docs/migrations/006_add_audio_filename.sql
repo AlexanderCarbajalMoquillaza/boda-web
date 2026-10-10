@@ -1,0 +1,1 @@
+ALTER TABLE wedding_audio ADD COLUMN IF NOT EXISTS file_name VARCHAR(255);

@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1480" height="980" viewBox="0 0 1480 980">
+  <defs>
+    <style>
+      .bg { fill: #fbfaf7; }
+      .entity { fill: #ffffff; stroke: #2f3a3d; stroke-width: 2; rx: 8; }
+      .title { fill: #314246; font: 700 18px Arial, sans-serif; }
+      .field { fill: #304045; font: 14px Arial, sans-serif; }
+      .pk { fill: #9f3f52; font: 700 14px Arial, sans-serif; }
+      .fk { fill: #356f78; font: 700 14px Arial, sans-serif; }
+      .line { stroke: #596a6f; stroke-width: 2; fill: none; }
+      .label { fill: #596a6f; font: 13px Arial, sans-serif; }
+    </style>
+  </defs>
+  <rect class="bg" x="0" y="0" width="1480" height="980"/>
+
+  <rect class="entity" x="60" y="80" width="260" height="205"/>
+  <text class="title" x="85" y="115">app_user</text>
+  <text class="pk" x="85" y="150">PK id</text>
+  <text class="field" x="85" y="175">full_name</text>
+  <text class="field" x="85" y="200">email UNIQUE</text>
+  <text class="field" x="85" y="225">password_hash</text>
+  <text class="field" x="85" y="250">role</text>
+
+  <rect class="entity" x="430" y="70" width="310" height="285"/>
+  <text class="title" x="455" y="105">wedding</text>
+  <text class="pk" x="455" y="140">PK id</text>
+  <text class="fk" x="455" y="165">FK owner_user_id</text>
+  <text class="field" x="455" y="190">title</text>
+  <text class="field" x="455" y="215">partner_one_name</text>
+  <text class="field" x="455" y="240">partner_two_name</text>
+  <text class="field" x="455" y="265">wedding_date</text>
+  <text class="field" x="455" y="290">invitation_slug UNIQUE</text>
+  <text class="field" x="455" y="315">max_registered_guests</text>
+  <text class="field" x="455" y="340">is_invitation_public</text>
+
+  <rect class="entity" x="855" y="70" width="315" height="255"/>
+  <text class="title" x="880" y="105">guest_group</text>
+  <text class="pk" x="880" y="140">PK id</text>
+  <text class="fk" x="880" y="165">FK wedding_id</text>
+  <text class="field" x="880" y="190">contact_name</text>
+  <text class="field" x="880" y="215">contact_email</text>
+  <text class="field" x="880" y="240">access_code</text>
+  <text class="field" x="880" y="265">max_guests_allowed</text>
+  <text class="field" x="880" y="290">status</text>
+
+  <rect class="entity" x="855" y="430" width="315" height="255"/>
+  <text class="title" x="880" y="465">guest</text>
+  <text class="pk" x="880" y="500">PK id</text>
+  <text class="fk" x="880" y="525">FK guest_group_id</text>
+  <text class="fk" x="880" y="550">FK reception_table_id</text>
+  <text class="field" x="880" y="575">full_name</text>
+  <text class="field" x="880" y="600">age_group</text>
+  <text class="field" x="880" y="625">menu_option</text>
+  <text class="field" x="880" y="650">attendance_status</text>
+
+  <rect class="entity" x="70" y="430" width="285" height="220"/>
+  <text class="title" x="95" y="465">wedding_task</text>
+  <text class="pk" x="95" y="500">PK id</text>
+  <text class="fk" x="95" y="525">FK wedding_id</text>
+  <text class="field" x="95" y="550">title</text>
+  <text class="field" x="95" y="575">due_date</text>
+  <text class="field" x="95" y="600">priority</text>
+  <text class="field" x="95" y="625">status</text>
+
+  <rect class="entity" x="430" y="430" width="310" height="245"/>
+  <text class="title" x="455" y="465">vendor</text>
+  <text class="pk" x="455" y="500">PK id</text>
+  <text class="fk" x="455" y="525">FK wedding_id</text>
+  <text class="field" x="455" y="550">name</text>
+  <text class="field" x="455" y="575">category</text>
+  <text class="field" x="455" y="600">contact_name</text>
+  <text class="field" x="455" y="625">estimated_cost</text>
+  <text class="field" x="455" y="650">contracted</text>
+
+  <rect class="entity" x="70" y="735" width="305" height="210"/>
+  <text class="title" x="95" y="770">budget_item</text>
+  <text class="pk" x="95" y="805">PK id</text>
+  <text class="fk" x="95" y="830">FK wedding_id</text>
+  <text class="fk" x="95" y="855">FK vendor_id nullable</text>
+  <text class="field" x="95" y="880">category</text>
+  <text class="field" x="95" y="905">estimated_amount</text>
+  <text class="field" x="95" y="930">payment_status</text>
+
+  <rect class="entity" x="855" y="755" width="315" height="165"/>
+  <text class="title" x="880" y="790">reception_table</text>
+  <text class="pk" x="880" y="825">PK id</text>
+  <text class="fk" x="880" y="850">FK wedding_id</text>
+  <text class="field" x="880" y="875">table_name</text>
+  <text class="field" x="880" y="900">capacity</text>
+
+  <rect class="entity" x="1210" y="430" width="230" height="210"/>
+  <text class="title" x="1235" y="465">schedule_item</text>
+  <text class="pk" x="1235" y="500">PK id</text>
+  <text class="fk" x="1235" y="525">FK wedding_id</text>
+  <text class="field" x="1235" y="550">starts_at</text>
+  <text class="field" x="1235" y="575">title</text>
+  <text class="field" x="1235" y="600">responsible</text>
+  <text class="field" x="1235" y="625">display_order</text>
+
+  <path class="line" d="M320 180 L430 180"/>
+  <text class="label" x="340" y="165">1 a N</text>
+
+  <path class="line" d="M740 180 L855 180"/>
+  <text class="label" x="770" y="165">1 a N</text>
+
+  <path class="line" d="M1012 325 L1012 430"/>
+  <text class="label" x="1025" y="385">1 a N</text>
+
+  <path class="line" d="M430 280 L355 430"/>
+  <text class="label" x="350" y="385">1 a N</text>
+
+  <path class="line" d="M585 355 L585 430"/>
+  <text class="label" x="600" y="400">1 a N</text>
+
+  <path class="line" d="M500 355 L270 735"/>
+  <text class="label" x="330" y="710">1 a N</text>
+
+  <path class="line" d="M740 305 L930 755"/>
+  <text class="label" x="830" y="730">1 a N</text>
+
+  <path class="line" d="M740 250 L1210 520"/>
+  <text class="label" x="1165" y="505">1 a N</text>
+
+  <path class="line" d="M430 565 L375 830"/>
+  <text class="label" x="390" y="715">1 a N</text>
+
+  <path class="line" d="M1012 685 L1012 755"/>
+  <text class="label" x="1025" y="730">N a 1</text>
+</svg>
