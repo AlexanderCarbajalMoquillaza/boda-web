@@ -48,12 +48,9 @@ public class DataSourceConfig {
                 String userInfo = uri.getUserInfo();
                 if (userInfo != null && userInfo.contains(":")) {
                     String[] credentials = userInfo.split(":", 2);
-                    if (username.isEmpty()) {
-                        username = credentials[0];
-                    }
-                    if (password.isEmpty()) {
-                        password = credentials[1];
-                    }
+                    // Las credenciales incrustadas en la URL de Neon tienen prioridad total
+                    username = credentials[0];
+                    password = credentials[1];
                 }
 
                 String host = uri.getHost();
@@ -83,6 +80,11 @@ public class DataSourceConfig {
                     jdbcUrl = "jdbc:postgresql://" + rawUrl.substring("postgresql://".length());
                 }
             }
+        }
+
+        if (username.isEmpty() && jdbcUrl.contains("localhost")) {
+            username = "alexander";
+            password = "admin";
         }
 
         HikariConfig config = new HikariConfig();
