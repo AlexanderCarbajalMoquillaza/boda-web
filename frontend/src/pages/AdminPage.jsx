@@ -12,8 +12,157 @@ function formatUploadDate(value) {
   return value ? new Intl.DateTimeFormat('es-PE', { dateStyle: 'medium' }).format(new Date(value)) : 'Fecha no disponible'
 }
 
-const emptyContent = { title: '', partnerOneName: '', partnerTwoName: '', weddingDate: '', venueName: '', venueAddress: '', locationsJson: '[]', maxRegisteredGuests: 1, welcomeMessage: '', storyText: '', dressCode: '', dressCodePreset: '', dressCodeImageUrl: '', mapUrl: '', giftRegistryUrl: '', giftOptionsJson: '[]', scheduleJson: '[]', faqJson: '[]', tablesJson: '[]', showWelcome: true, showStory: true, showSchedule: true, showDressCode: true, showLocation: true, showGiftRegistry: true, showFaq: true, showTables: true, primaryColor: '#7fb3a8', accentColor: '#b79a62', backgroundColor: '#f4f1ea' }
-function parseEditorList(value) { try { const parsed = JSON.parse(value || '[]'); return Array.isArray(parsed) ? parsed : [] } catch { return [] } }
+function parseEditorList(value) {
+  try {
+    const parsed = JSON.parse(value || '[]')
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+const defaultDressCodeColors = ['#961E34', '#A98034', '#9E7D55', '#5D6D69', '#4E6532', '#8A4114', '#2C3A39']
+
+function parseDressCodeColors(json) {
+  try {
+    const parsed = JSON.parse(json || '[]')
+    if (Array.isArray(parsed) && parsed.length > 0) return parsed
+  } catch {
+    // fallback
+  }
+  return defaultDressCodeColors
+}
+
+const emptyContent = { title: '', partnerOneName: '', partnerTwoName: '', weddingDate: '', venueName: '', venueAddress: '', locationsJson: '[]', maxRegisteredGuests: 1, welcomeMessage: '', storyText: '', dressCode: '', dressCodePreset: '', dressCodeImageUrl: '', showDressCodePalette: false, dressCodeColorsJson: '[]', mapUrl: '', giftRegistryUrl: '', giftOptionsJson: '[]', scheduleJson: '[]', faqJson: '[]', tablesJson: '[]', showWelcome: true, showStory: true, showSchedule: true, showDressCode: true, showLocation: true, showGiftRegistry: true, showFaq: true, showTables: true, primaryColor: '#7fb3a8', accentColor: '#b79a62', backgroundColor: '#f4f1ea', templateId: 'FLORAL_ROMANCE' }
+function hexToRgb(hex) {
+  if (!hex) return { r: 0, g: 0, b: 0, text: '0, 0, 0' }
+  let clean = String(hex).replace('#', '').trim()
+  if (clean.length === 3) {
+    clean = clean.split('').map((c) => c + c).join('')
+  }
+  const num = parseInt(clean, 16)
+  if (isNaN(num) || clean.length !== 6) return { r: 0, g: 0, b: 0, text: '0, 0, 0' }
+  const r = (num >> 16) & 255
+  const g = (num >> 8) & 255
+  const b = num & 255
+  return { r, g, b, text: `${r}, ${g}, ${b}` }
+}
+
+function rgbToHex(r, g, b) {
+  const clamp = (val) => Math.max(0, Math.min(255, Number(val) || 0))
+  return `#${((1 << 24) + (clamp(r) << 16) + (clamp(g) << 8) + clamp(b)).toString(16).slice(1).toUpperCase()}`
+}
+
+function ColorFieldControl({ label, badge, purpose, value, onChange }) {
+  const [copiedType, setCopiedType] = useState('')
+  const hexValue = (value || '#7FB3A8').toUpperCase()
+  const rgb = hexToRgb(hexValue)
+
+  function handleHexChange(e) {
+    let val = e.target.value.trim()
+    if (!val.startsWith('#') && val.length > 0) {
+      val = `#${val}`
+    }
+    onChange(val)
+  }
+
+  function handleRgbSubmit(val) {
+    const trimmed = (val || '').trim()
+    // Soporta "122, 28, 46", "122 28 46", "rgb(122, 28, 46)"
+    const match = trimmed.match(/^(?:rgb\()?[\s]*(\d{1,3})[\s,]+(\d{1,3})[\s,]+(\d{1,3})[\s)]*$/i)
+    if (match) {
+      const hex = rgbToHex(match[1], match[2], match[3])
+      onChange(hex)
+    }
+  }
+
+  function handleCopy(textToCopy, type) {
+    if (!textToCopy) return
+    navigator.clipboard?.writeText(textToCopy)
+    setCopiedType(type)
+    setTimeout(() => setCopiedType(''), 2200)
+  }
+
+  const isValidHex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(hexValue)
+
+  return (
+    <div className="color-field-card">
+      <div className="color-field-header">
+        <div className="color-field-title-row">
+          <strong className="color-field-name">{label}</strong>
+          {badge && <span className="color-field-badge">{badge}</span>}
+        </div>
+        <p className="color-field-purpose">{purpose}</p>
+      </div>
+
+      <div className="color-field-interactive">
+        <label className="color-swatch-picker-label" title="Haz clic para abrir el selector visual de color">
+          <input
+            type="color"
+            value={isValidHex && hexValue.length === 7 ? hexValue : '#7FB3A8'}
+            onChange={(e) => onChange(e.target.value.toUpperCase())}
+            className="color-hidden-native-input"
+          />
+          <span
+            className="color-swatch-circle"
+            style={{ backgroundColor: isValidHex ? hexValue : '#7FB3A8' }}
+          />
+          <span className="swatch-hint">Cambiar</span>
+        </label>
+
+        <div className="color-inputs-stack">
+          <div className="color-input-group">
+            <span className="color-input-prefix">HEX</span>
+            <input
+              type="text"
+              value={hexValue}
+              onChange={handleHexChange}
+              placeholder="#RRGGBB"
+              maxLength={7}
+            />
+          </div>
+
+          <div className="color-input-group">
+            <span className="color-input-prefix">RGB</span>
+            <input
+              type="text"
+              defaultValue={rgb.text}
+              key={hexValue}
+              onBlur={(e) => handleRgbSubmit(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  handleRgbSubmit(e.target.value)
+                }
+              }}
+              placeholder="R, G, B"
+              title="Presiona Enter o cambia de campo para aplicar"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="color-copy-actions">
+        <button
+          type="button"
+          className={`color-copy-btn ${copiedType === 'hex' ? 'is-copied' : ''}`}
+          onClick={() => handleCopy(hexValue, 'hex')}
+          title="Copiar código HEX"
+        >
+          {copiedType === 'hex' ? '✓ HEX Copiado' : '📋 Copiar HEX'}
+        </button>
+        <button
+          type="button"
+          className={`color-copy-btn ${copiedType === 'rgb' ? 'is-copied' : ''}`}
+          onClick={() => handleCopy(`rgb(${rgb.text})`, 'rgb')}
+          title="Copiar formato RGB"
+        >
+          {copiedType === 'rgb' ? '✓ RGB Copiado' : '📋 Copiar RGB'}
+        </button>
+      </div>
+    </div>
+  )
+}
 
 function AdminPage() {
   const [token, setToken] = useState(() => sessionStorage.getItem('adminToken') || '')
@@ -249,7 +398,8 @@ function AdminPage() {
       setMessage('Contenido y datos generales guardados correctamente.')
       setError('')
     } catch (requestError) {
-      setError(requestError.response?.data?.message || 'No se pudo guardar el contenido.')
+      console.error('Error al guardar contenido:', requestError)
+      setError(requestError.response?.data?.message || requestError.message || 'No se pudo guardar el contenido.')
     }
   }
 
@@ -281,6 +431,49 @@ function AdminPage() {
   function removeGuestFromTables(guestId) {
     const normalizedId = String(guestId)
     setTableItems((current) => current.map((table) => ({ ...table, guestIds: (table.guestIds || []).filter((id) => String(id) !== normalizedId) })))
+  }
+
+  function handleToggleDressCodePalette(enabled) {
+    const currentList = parseDressCodeColors(contentForm.dressCodeColorsJson)
+    setContentForm({
+      ...contentForm,
+      showDressCodePalette: enabled,
+      dressCodeColorsJson: JSON.stringify(currentList),
+    })
+  }
+
+  function handleAddDressCodeColor(newHex) {
+    const current = parseDressCodeColors(contentForm.dressCodeColorsJson)
+    if (!current.includes(newHex)) {
+      setContentForm({
+        ...contentForm,
+        dressCodeColorsJson: JSON.stringify([...current, newHex]),
+      })
+    }
+  }
+
+  function handleUpdateDressCodeColor(index, newHex) {
+    const current = [...parseDressCodeColors(contentForm.dressCodeColorsJson)]
+    current[index] = newHex
+    setContentForm({
+      ...contentForm,
+      dressCodeColorsJson: JSON.stringify(current),
+    })
+  }
+
+  function handleRemoveDressCodeColor(index) {
+    const current = parseDressCodeColors(contentForm.dressCodeColorsJson)
+    setContentForm({
+      ...contentForm,
+      dressCodeColorsJson: JSON.stringify(current.filter((_, i) => i !== index)),
+    })
+  }
+
+  function handleResetDressCodeColors() {
+    setContentForm({
+      ...contentForm,
+      dressCodeColorsJson: JSON.stringify(defaultDressCodeColors),
+    })
   }
 
   if (!token) {
@@ -553,10 +746,174 @@ function AdminPage() {
           </div>
           <label>Texto de bienvenida<textarea value={contentForm.welcomeMessage || ''} onChange={(event) => setContentForm({ ...contentForm, welcomeMessage: event.target.value })} rows="3" /></label>
           <label>Historia<textarea value={contentForm.storyText || ''} onChange={(event) => setContentForm({ ...contentForm, storyText: event.target.value })} rows="5" /></label>
-          <section className="content-editor-block"><h3>Código de vestimenta</h3><p className="editor-hint">Escribe la indicación que verán los invitados y usa una imagen propia o una URL de imagen. No se impondrá ninguna ilustración predeterminada.</p><label>Descripción para invitados<textarea value={contentForm.dressCode || ''} onChange={(event) => setContentForm({ ...contentForm, dressCode: event.target.value, dressCodePreset: '' })} placeholder="Ejemplo: Formal. Mujeres: vestido largo. Hombres: traje oscuro." rows="3" /></label><div className="dress-code-upload"><label>Subir imagen desde tu equipo<input type="file" accept="image/*" onChange={(event) => setDressCodeImageFile(event.target.files?.[0] || null)} /></label><button type="button" className="secondary-button upload-image-button" onClick={handleDressCodeImageUpload} disabled={uploadingDressCode}>{uploadingDressCode ? 'Cargando imagen...' : 'Cargar imagen'}</button></div><label>O usar enlace de imagen<input type="url" value={contentForm.dressCodeImageUrl || ''} onChange={(event) => setContentForm({ ...contentForm, dressCodeImageUrl: event.target.value })} placeholder="https://sitio.com/vestimenta.jpg" /></label>{contentForm.dressCodeImageUrl && <img className="dress-code-admin-preview" src={getImageUrl(contentForm.dressCodeImageUrl)} alt="Vista previa del código de vestimenta" />}</section>
+          <section className="content-editor-block">
+            <h3>Código de vestimenta</h3>
+            <p className="editor-hint">Escribe la indicación que verán los invitados y usa una imagen propia o una URL de imagen. No se impondrá ninguna ilustración predeterminada.</p>
+            <label>Descripción para invitados<textarea value={contentForm.dressCode || ''} onChange={(event) => setContentForm({ ...contentForm, dressCode: event.target.value, dressCodePreset: '' })} placeholder="Ejemplo: Formal. Mujeres: vestido largo. Hombres: traje oscuro." rows="3" /></label>
+            <div className="dress-code-upload">
+              <label>Subir imagen desde tu equipo<input type="file" accept="image/*" onChange={(event) => setDressCodeImageFile(event.target.files?.[0] || null)} /></label>
+              <button type="button" className="secondary-button upload-image-button" onClick={handleDressCodeImageUpload} disabled={uploadingDressCode}>{uploadingDressCode ? 'Cargando imagen...' : 'Cargar imagen'}</button>
+            </div>
+            <label>O usar enlace de imagen<input type="url" value={contentForm.dressCodeImageUrl || ''} onChange={(event) => setContentForm({ ...contentForm, dressCodeImageUrl: event.target.value })} placeholder="https://sitio.com/vestimenta.jpg" /></label>
+            {contentForm.dressCodeImageUrl && <img className="dress-code-admin-preview" src={getImageUrl(contentForm.dressCodeImageUrl)} alt="Vista previa del código de vestimenta" />}
+
+            {/* Administrador de la paleta de colores de vestimenta para invitados */}
+            <div className="dresscode-palette-manager">
+              <label className="dresscode-palette-toggle">
+                <input
+                  type="checkbox"
+                  checked={Boolean(contentForm.showDressCodePalette)}
+                  onChange={(e) => handleToggleDressCodePalette(e.target.checked)}
+                />
+                <span><strong>Habilitar paleta de colores sugerida en código de vestimenta</strong></span>
+              </label>
+              <p className="editor-hint" style={{ marginTop: '6px', marginBottom: contentForm.showDressCodePalette ? '12px' : '0' }}>
+                Si activas esta opción, los invitados podrán ver los círculos con los tonos sugeridos para su atuendo en la invitación.
+              </p>
+
+              {contentForm.showDressCodePalette && (
+                <div className="dresscode-palette-content">
+                  <div className="dresscode-swatches-grid">
+                    {parseDressCodeColors(contentForm.dressCodeColorsJson).map((hex, index) => (
+                      <div className="dresscode-swatch-item" key={`swatch-${index}-${hex}`}>
+                        <label title="Haz clic para cambiar este color" style={{ cursor: 'pointer' }}>
+                          <input
+                            type="color"
+                            value={hex}
+                            onChange={(e) => handleUpdateDressCodeColor(index, e.target.value.toUpperCase())}
+                            className="color-hidden-native-input"
+                          />
+                          <span className="dresscode-swatch-circle" style={{ backgroundColor: hex }} />
+                        </label>
+                        <span className="dresscode-swatch-hex">{hex}</span>
+                        <button
+                          type="button"
+                          className="dresscode-swatch-remove"
+                          onClick={() => handleRemoveDressCodeColor(index)}
+                          title="Eliminar este color"
+                          aria-label={`Eliminar color ${hex}`}
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="dresscode-add-color-row">
+                    <label className="dresscode-color-picker-input">
+                      <input
+                        type="color"
+                        defaultValue="#7A1C2E"
+                        onChange={(e) => handleAddDressCodeColor(e.target.value.toUpperCase())}
+                        className="color-hidden-native-input"
+                      />
+                      <span>+ Añadir nuevo color</span>
+                    </label>
+                    <button
+                      type="button"
+                      className="dresscode-reset-btn"
+                      onClick={handleResetDressCodeColors}
+                    >
+                      ↺ Restablecer colores sugeridos por defecto
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
           <section className="content-editor-block"><div className="repeat-heading"><div><h3>Ubicaciones del evento</h3><p className="editor-hint">Agrega ceremonia, recepción u otros momentos en lugares diferentes.</p></div><button type="button" className="secondary-button" onClick={() => setLocationItems([...locationItems, { type: 'Ceremonia', name: '', address: '', mapUrl: '' }])}>+ Añadir ubicación</button></div>{locationItems.map((item, index) => <div className="repeat-row location-row" key={`location-${index}`}><select value={item.type || ''} onChange={(event) => setLocationItems(locationItems.map((current, row) => row === index ? { ...current, type: event.target.value } : current))}><option>Ceremonia</option><option>Recepción</option><option>Celebración</option><option>Otro</option></select><input placeholder="Nombre del lugar" value={item.name || ''} onChange={(event) => setLocationItems(locationItems.map((current, row) => row === index ? { ...current, name: event.target.value } : current))} /><input placeholder="Dirección" value={item.address || ''} onChange={(event) => setLocationItems(locationItems.map((current, row) => row === index ? { ...current, address: event.target.value } : current))} /><input placeholder="URL Google Maps" value={item.mapUrl || ''} onChange={(event) => setLocationItems(locationItems.map((current, row) => row === index ? { ...current, mapUrl: event.target.value } : current))} /><button type="button" className="remove-button" onClick={() => setLocationItems(locationItems.filter((_, row) => row !== index))}>Eliminar</button></div>)}</section>
           <section className="content-editor-block"><div className="repeat-heading"><div><h3>Opciones de regalos</h3><p className="editor-hint">Puedes ofrecer transferencia, mesa de regalos, lista online o un mensaje libre.</p></div><button type="button" className="secondary-button" onClick={() => setGiftItems([...giftItems, { type: 'Mesa de regalos', title: '', details: '', url: '' }])}>+ Añadir opción</button></div>{giftItems.map((item, index) => <div className="repeat-row gift-row" key={`gift-${index}`}><select value={item.type || ''} onChange={(event) => setGiftItems(giftItems.map((current, row) => row === index ? { ...current, type: event.target.value } : current))}><option>Mesa de regalos</option><option>Transferencia</option><option>Regalo físico</option><option>Otro</option></select><input placeholder="Título" value={item.title || ''} onChange={(event) => setGiftItems(giftItems.map((current, row) => row === index ? { ...current, title: event.target.value } : current))} /><input placeholder="Datos o instrucciones" value={item.details || ''} onChange={(event) => setGiftItems(giftItems.map((current, row) => row === index ? { ...current, details: event.target.value } : current))} /><input placeholder="Enlace opcional" value={item.url || ''} onChange={(event) => setGiftItems(giftItems.map((current, row) => row === index ? { ...current, url: event.target.value } : current))} /><button type="button" className="remove-button" onClick={() => setGiftItems(giftItems.filter((_, row) => row !== index))}>Eliminar</button></div>)}</section>
-          <div className="palette-editor"><h3>Paleta de la invitación</h3><label>Color principal<input type="color" value={contentForm.primaryColor || '#7fb3a8'} onChange={(event) => setContentForm({ ...contentForm, primaryColor: event.target.value })} /></label><label>Color de acento<input type="color" value={contentForm.accentColor || '#b79a62'} onChange={(event) => setContentForm({ ...contentForm, accentColor: event.target.value })} /></label><label>Color de fondo<input type="color" value={contentForm.backgroundColor || '#f4f1ea'} onChange={(event) => setContentForm({ ...contentForm, backgroundColor: event.target.value })} /></label></div>
+          <div className="template-selector-block">
+            <div className="repeat-heading">
+              <div>
+                <h3>Plantilla de diseño de la invitación</h3>
+                <p className="editor-hint">Escoge el estilo visual que verán tus invitados. Ambos diseños adaptan automáticamente los colores que elijas abajo.</p>
+              </div>
+            </div>
+            <div className="templates-selector-grid">
+              <button
+                type="button"
+                className={`template-choice-card ${contentForm.templateId !== 'EDITORIAL_CARDS' ? 'is-active' : ''}`}
+                onClick={() => setContentForm({ ...contentForm, templateId: 'FLORAL_ROMANCE' })}
+              >
+                <div className="template-badge-tag">Clásica</div>
+                <h4>Romántica Floral</h4>
+                <p>Sobre interactivo con rosas botánicas, monograma con iniciales y presentación tradicional refinada.</p>
+                <div className="template-sample-preview floral-sample">
+                  <span>✉ Sobre Floral</span>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                className={`template-choice-card ${contentForm.templateId === 'EDITORIAL_CARDS' ? 'is-active' : ''}`}
+                onClick={() => setContentForm({ ...contentForm, templateId: 'EDITORIAL_CARDS' })}
+              >
+                <div className="template-badge-tag highlight-badge">Moderna</div>
+                <h4>Editorial Romance &amp; Arcos</h4>
+                <p>Pantalla de inicio con fondo floral en acuarela, caligrafía artística, corazones entrelazados y tarjetas con arcos elegantes.</p>
+                <div className="template-sample-preview cards-sample">
+                  <span>♥ Cards &amp; Arcos</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <div className="palette-editor">
+            <div className="palette-heading-row">
+              <div className="palette-heading-text">
+                <h3>Paleta de la invitación</h3>
+                <p>Personaliza los tonos principales. Estos colores se aplican dinámicamente a la plantilla seleccionada.</p>
+              </div>
+              <div className="quick-palette-pills">
+                <span className="quick-palette-label">Sugerencias:</span>
+                <button
+                  type="button"
+                  className="quick-palette-btn"
+                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#7A1C2E', accentColor: '#B79A62', backgroundColor: '#F9F4F0' })}
+                >
+                  <span className="dot" style={{ background: '#7A1C2E' }} /> Borgoña & Oro
+                </button>
+                <button
+                  type="button"
+                  className="quick-palette-btn"
+                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#7FB3A8', accentColor: '#B79A62', backgroundColor: '#F4F1EA' })}
+                >
+                  <span className="dot" style={{ background: '#7FB3A8' }} /> Salvia Clásico
+                </button>
+                <button
+                  type="button"
+                  className="quick-palette-btn"
+                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#2C3E50', accentColor: '#D4AF37', backgroundColor: '#F8F9FA' })}
+                >
+                  <span className="dot" style={{ background: '#2C3E50' }} /> Azul Noche & Oro
+                </button>
+              </div>
+            </div>
+            <div className="palette-controls-grid">
+              <ColorFieldControl
+                label="Color principal"
+                badge="Botones y Énfasis"
+                purpose="Botones principales ('Ver Invitación', 'Confirmar asistencia'), tarjeta destacada de regalos y elementos de énfasis"
+                value={contentForm.primaryColor || '#7FB3A8'}
+                onChange={(val) => setContentForm({ ...contentForm, primaryColor: val })}
+              />
+              <ColorFieldControl
+                label="Color de acento"
+                badge="Caligrafía e Iconos"
+                purpose="Nombres de los novios en caligrafía artística, corazones entrelazados, títulos de sección y detalles decorativos"
+                value={contentForm.accentColor || '#B79A62'}
+                onChange={(val) => setContentForm({ ...contentForm, accentColor: val })}
+              />
+              <ColorFieldControl
+                label="Color de fondo"
+                badge="Lienzo y Portada"
+                purpose="Fondo de la pantalla de inicio (con velo sobre las rosas en acuarela), pliegos y lienzos de la invitación"
+                value={contentForm.backgroundColor || '#F4F1EA'}
+                onChange={(val) => setContentForm({ ...contentForm, backgroundColor: val })}
+              />
+            </div>
+          </div>
           <div className="repeat-editor"><div className="repeat-heading"><h3>Agenda del evento</h3><button type="button" className="secondary-button" onClick={() => setScheduleItems([...scheduleItems, { time: '', title: '', notes: '' }])}>+ Añadir actividad</button></div>{scheduleItems.map((item, index) => <div className="repeat-row" key={`schedule-${index}`}><input type="time" value={item.time || ''} onChange={(event) => setScheduleItems(scheduleItems.map((current, row) => row === index ? { ...current, time: event.target.value } : current))} /><input placeholder="Actividad" value={item.title || ''} onChange={(event) => setScheduleItems(scheduleItems.map((current, row) => row === index ? { ...current, title: event.target.value } : current))} /><input placeholder="Nota o responsable" value={item.notes || ''} onChange={(event) => setScheduleItems(scheduleItems.map((current, row) => row === index ? { ...current, notes: event.target.value } : current))} /><button type="button" className="remove-button" onClick={() => setScheduleItems(scheduleItems.filter((_, row) => row !== index))}>Eliminar</button></div>)}</div>
           <div className="repeat-editor"><div className="repeat-heading"><h3>Preguntas frecuentes</h3><button type="button" className="secondary-button" onClick={() => setFaqItems([...faqItems, { question: '', answer: '' }])}>+ Añadir pregunta</button></div>{faqItems.map((item, index) => <div className="repeat-row repeat-row-faq" key={`faq-${index}`}><input placeholder="Pregunta" value={item.question || ''} onChange={(event) => setFaqItems(faqItems.map((current, row) => row === index ? { ...current, question: event.target.value } : current))} /><input placeholder="Respuesta" value={item.answer || ''} onChange={(event) => setFaqItems(faqItems.map((current, row) => row === index ? { ...current, answer: event.target.value } : current))} /><button type="button" className="remove-button" onClick={() => setFaqItems(faqItems.filter((_, row) => row !== index))}>Eliminar</button></div>)}</div>
           <div className="repeat-editor"><div className="repeat-heading"><h3>Mesas</h3><button type="button" className="secondary-button" onClick={() => setTableItems([...tableItems, { name: '', capacity: '', guestIds: [] }])}>+ Añadir mesa</button></div>{tableItems.map((item, index) => <div className="repeat-row" key={`table-${index}`}><input placeholder="Nombre de mesa" value={item.name || ''} onChange={(event) => setTableItems(tableItems.map((current, row) => row === index ? { ...current, name: event.target.value } : current))} /><input type="number" min="1" placeholder="Capacidad" value={item.capacity || ''} onChange={(event) => setTableItems(tableItems.map((current, row) => row === index ? { ...current, capacity: event.target.value } : current))} /><button type="button" className="remove-button" onClick={() => setTableItems(tableItems.filter((_, row) => row !== index))}>Eliminar</button></div>)}</div>

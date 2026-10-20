@@ -17,6 +17,8 @@ public class PublicInvitationResponse {
     private String dressCode;
     private String dressCodePreset;
     private String dressCodeImageUrl;
+    private Boolean showDressCodePalette;
+    private String dressCodeColorsJson;
     private String mapUrl;
     private String giftRegistryUrl;
     private String giftOptionsJson;
@@ -34,6 +36,7 @@ public class PublicInvitationResponse {
     private String primaryColor;
     private String accentColor;
     private String backgroundColor;
+    private String templateId;
 
     public PublicInvitationResponse(
             String title,
@@ -49,6 +52,8 @@ public class PublicInvitationResponse {
             String dressCode,
             String dressCodePreset,
             String dressCodeImageUrl,
+            Boolean showDressCodePalette,
+            String dressCodeColorsJson,
             String mapUrl,
             String giftRegistryUrl,
             String giftOptionsJson,
@@ -65,7 +70,8 @@ public class PublicInvitationResponse {
             Boolean showTables,
             String primaryColor,
             String accentColor,
-            String backgroundColor
+            String backgroundColor,
+            String templateId
     ) {
         this.title = title;
         this.partnerOneName = partnerOneName;
@@ -80,6 +86,8 @@ public class PublicInvitationResponse {
         this.dressCode = dressCode;
         this.dressCodePreset = dressCodePreset;
         this.dressCodeImageUrl = dressCodeImageUrl;
+        this.showDressCodePalette = showDressCodePalette;
+        this.dressCodeColorsJson = dressCodeColorsJson;
         this.mapUrl = mapUrl;
         this.giftRegistryUrl = giftRegistryUrl;
         this.giftOptionsJson = giftOptionsJson;
@@ -97,6 +105,7 @@ public class PublicInvitationResponse {
         this.primaryColor = primaryColor;
         this.accentColor = accentColor;
         this.backgroundColor = backgroundColor;
+        this.templateId = templateId;
     }
 
     public String getTitle() {
@@ -149,4 +158,7 @@ public class PublicInvitationResponse {
     public String getPrimaryColor() { return primaryColor; }
     public String getAccentColor() { return accentColor; }
     public String getBackgroundColor() { return backgroundColor; }
+    public String getTemplateId() { return templateId; }
+    public Boolean getShowDressCodePalette() { return showDressCodePalette; }
+    public String getDressCodeColorsJson() { return dressCodeColorsJson; }
 }

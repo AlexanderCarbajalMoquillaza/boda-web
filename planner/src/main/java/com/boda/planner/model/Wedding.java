@@ -61,6 +61,12 @@ public class Wedding {
     @Column(name = "dress_code_image_url", length = 500)
     private String dressCodeImageUrl;
 
+    @Column(name = "show_dress_code_palette")
+    private Boolean showDressCodePalette = false;
+
+    @Column(name = "dress_code_colors_json", columnDefinition = "TEXT")
+    private String dressCodeColorsJson = "[]";
+
     @Column(name = "map_url", length = 500)
     private String mapUrl;
 
@@ -109,6 +115,9 @@ public class Wedding {
     private String accentColor = "#b79a62";
     @Column(name = "background_color", length = 20)
     private String backgroundColor = "#f4f1ea";
+
+    @Column(name = "template_id", length = 50)
+    private String templateId = "FLORAL_ROMANCE";
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -216,6 +225,10 @@ public class Wedding {
     public void setDressCodePreset(String dressCodePreset) { this.dressCodePreset = dressCodePreset; }
     public String getDressCodeImageUrl() { return dressCodeImageUrl; }
     public void setDressCodeImageUrl(String dressCodeImageUrl) { this.dressCodeImageUrl = dressCodeImageUrl; }
+    public Boolean getShowDressCodePalette() { return showDressCodePalette; }
+    public void setShowDressCodePalette(Boolean showDressCodePalette) { this.showDressCodePalette = showDressCodePalette; }
+    public String getDressCodeColorsJson() { return dressCodeColorsJson; }
+    public void setDressCodeColorsJson(String dressCodeColorsJson) { this.dressCodeColorsJson = dressCodeColorsJson; }
     public String getMapUrl() { return mapUrl; }
     public void setMapUrl(String mapUrl) { this.mapUrl = mapUrl; }
     public String getGiftRegistryUrl() { return giftRegistryUrl; }
@@ -250,6 +263,8 @@ public class Wedding {
     public void setAccentColor(String accentColor) { this.accentColor = accentColor; }
     public String getBackgroundColor() { return backgroundColor; }
     public void setBackgroundColor(String backgroundColor) { this.backgroundColor = backgroundColor; }
+    public String getTemplateId() { return templateId; }
+    public void setTemplateId(String templateId) { this.templateId = templateId; }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;

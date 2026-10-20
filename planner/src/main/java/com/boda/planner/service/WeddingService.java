@@ -85,6 +85,8 @@ public class WeddingService {
         wedding.setDressCode(request.getDressCode());
         wedding.setDressCodePreset(request.getDressCodePreset());
         wedding.setDressCodeImageUrl(request.getDressCodeImageUrl());
+        wedding.setShowDressCodePalette(Boolean.TRUE.equals(request.getShowDressCodePalette()));
+        wedding.setDressCodeColorsJson(request.getDressCodeColorsJson() != null ? request.getDressCodeColorsJson() : "[]");
         wedding.setMapUrl(request.getMapUrl());
         wedding.setGiftRegistryUrl(request.getGiftRegistryUrl());
         wedding.setGiftOptionsJson(request.getGiftOptionsJson());
@@ -102,6 +104,7 @@ public class WeddingService {
         wedding.setPrimaryColor(request.getPrimaryColor());
         wedding.setAccentColor(request.getAccentColor());
         wedding.setBackgroundColor(request.getBackgroundColor());
+        wedding.setTemplateId(request.getTemplateId() != null && !request.getTemplateId().isBlank() ? request.getTemplateId() : "FLORAL_ROMANCE");
         return toContentResponse(weddingRepository.save(wedding));
     }
 
@@ -159,6 +162,8 @@ public class WeddingService {
         response.setDressCode(wedding.getDressCode());
         response.setDressCodePreset(wedding.getDressCodePreset());
         response.setDressCodeImageUrl(wedding.getDressCodeImageUrl());
+        response.setShowDressCodePalette(Boolean.TRUE.equals(wedding.getShowDressCodePalette()));
+        response.setDressCodeColorsJson(wedding.getDressCodeColorsJson() != null ? wedding.getDressCodeColorsJson() : "[]");
         response.setMapUrl(wedding.getMapUrl());
         response.setGiftRegistryUrl(wedding.getGiftRegistryUrl());
         response.setGiftOptionsJson(wedding.getGiftOptionsJson());
@@ -176,6 +181,7 @@ public class WeddingService {
         response.setPrimaryColor(wedding.getPrimaryColor());
         response.setAccentColor(wedding.getAccentColor());
         response.setBackgroundColor(wedding.getBackgroundColor());
+        response.setTemplateId(wedding.getTemplateId() != null ? wedding.getTemplateId() : "FLORAL_ROMANCE");
         return response;
     }
 

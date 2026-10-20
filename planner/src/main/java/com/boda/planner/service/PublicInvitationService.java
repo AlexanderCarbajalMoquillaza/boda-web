@@ -29,11 +29,14 @@ public class PublicInvitationService {
                 wedding.getInvitationSlug(),
                 wedding.getWelcomeMessage(), wedding.getStoryText(), wedding.getDressCode(),
                 wedding.getDressCodePreset(), wedding.getDressCodeImageUrl(),
+                Boolean.TRUE.equals(wedding.getShowDressCodePalette()),
+                wedding.getDressCodeColorsJson() != null ? wedding.getDressCodeColorsJson() : "[]",
                 wedding.getMapUrl(), wedding.getGiftRegistryUrl(), wedding.getGiftOptionsJson(), wedding.getScheduleJson(),
                 wedding.getFaqJson(), wedding.getTablesJson(), wedding.getShowWelcome(),
                 wedding.getShowStory(), wedding.getShowSchedule(), wedding.getShowDressCode(),
                 wedding.getShowLocation(), wedding.getShowGiftRegistry(), wedding.getShowFaq(),
-                wedding.getShowTables(), wedding.getPrimaryColor(), wedding.getAccentColor(), wedding.getBackgroundColor()
+                wedding.getShowTables(), wedding.getPrimaryColor(), wedding.getAccentColor(), wedding.getBackgroundColor(),
+                wedding.getTemplateId() != null ? wedding.getTemplateId() : "FLORAL_ROMANCE"
         );
     }
 

@@ -18,6 +18,8 @@ public class WeddingContentRequest {
     private String dressCode;
     private String dressCodePreset;
     private String dressCodeImageUrl;
+    private Boolean showDressCodePalette = false;
+    private String dressCodeColorsJson = "[]";
     private String mapUrl;
     private String giftRegistryUrl;
     private String giftOptionsJson = "[]";
@@ -35,6 +37,7 @@ public class WeddingContentRequest {
     private String primaryColor = "#7fb3a8";
     private String accentColor = "#b79a62";
     private String backgroundColor = "#f4f1ea";
+    private String templateId = "FLORAL_ROMANCE";
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -62,6 +65,10 @@ public class WeddingContentRequest {
     public void setDressCodePreset(String value) { this.dressCodePreset = value; }
     public String getDressCodeImageUrl() { return dressCodeImageUrl; }
     public void setDressCodeImageUrl(String value) { this.dressCodeImageUrl = value; }
+    public Boolean getShowDressCodePalette() { return showDressCodePalette; }
+    public void setShowDressCodePalette(Boolean value) { this.showDressCodePalette = value; }
+    public String getDressCodeColorsJson() { return dressCodeColorsJson; }
+    public void setDressCodeColorsJson(String value) { this.dressCodeColorsJson = value; }
     public String getMapUrl() { return mapUrl; }
     public void setMapUrl(String value) { this.mapUrl = value; }
     public String getGiftRegistryUrl() { return giftRegistryUrl; }
@@ -96,4 +103,6 @@ public class WeddingContentRequest {
     public void setAccentColor(String value) { this.accentColor = value; }
     public String getBackgroundColor() { return backgroundColor; }
     public void setBackgroundColor(String value) { this.backgroundColor = value; }
+    public String getTemplateId() { return templateId; }
+    public void setTemplateId(String value) { this.templateId = value; }
 }

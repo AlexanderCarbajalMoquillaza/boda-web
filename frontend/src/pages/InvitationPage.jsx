@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { getImageUrl, getInvitationBySlug, getPublicAudio } from '../services/api'
 
@@ -51,32 +51,92 @@ function InvitationPage() {
     return <main className="status-screen error-screen">{error}</main>
   }
 
+  const isEditorial = invitation.templateId === 'EDITORIAL_CARDS'
+
   return (
-    <main className="invitation-page">
-      <section className="invitation-hero">
-        {audio && <div className="music-control"><audio id="public-wedding-audio" src={getImageUrl(audio.audioUrl)} loop /><button type="button" onClick={() => { const player = document.getElementById('public-wedding-audio'); if (musicOn) player.pause(); else player.play(); setMusicOn(!musicOn) }}>{musicOn ? 'Pausar música' : 'Activar música'}</button></div>}
-        <p className="eyebrow">Nuestra boda</p>
-        <h1>{invitation.partnerOneName} <span>&amp;</span> {invitation.partnerTwoName}</h1>
-        <p className="invitation-title">{invitation.title}</p>
-        <p className="wedding-date">{formatDate(invitation.weddingDate)}</p>
+    <main
+      className={`invitation-page ${isEditorial ? 'theme-editorial-cards' : ''}`}
+      style={{
+        '--primary-color': invitation.primaryColor || '#7fb3a8',
+        '--accent-color': invitation.accentColor || '#b79a62',
+        '--invitation-background': invitation.backgroundColor || '#f4f1ea',
+      }}
+    >
+      {audio && (
+        <div className={isEditorial ? 'editorial-floating-music' : 'music-control'}>
+          <audio id="public-wedding-audio" src={getImageUrl(audio.audioUrl)} loop />
+          <button
+            type="button"
+            className={isEditorial ? `floating-audio-pill ${musicOn ? 'is-playing' : ''}` : (musicOn ? 'is-playing' : '')}
+            onClick={() => {
+              const player = document.getElementById('public-wedding-audio')
+              if (musicOn) player.pause()
+              else player.play()
+              setMusicOn(!musicOn)
+            }}
+          >
+            {isEditorial ? (
+              <span className="audio-note-icon">♫</span>
+            ) : (
+              <span>{musicOn ? 'Pausar música' : 'Activar música'}</span>
+            )}
+          </button>
+        </div>
+      )}
 
-        <div className="hero-divider" aria-hidden="true">✦</div>
+      {isEditorial ? (
+        <div className="editorial-body-container" style={{ paddingTop: '50px' }}>
+          <section className="editorial-card hero-card">
+            <div className="card-inner-frame">
+              <p className="editorial-eyebrow">Nuestra Boda</p>
+              <h1 className="editorial-couple-title">
+                <span className="editorial-title-name">{invitation.partnerOneName}</span>
+                <span className="editorial-title-amp">&amp;</span>
+                <span className="editorial-title-name">{invitation.partnerTwoName}</span>
+              </h1>
+              <p className="editorial-wedding-date">{formatDate(invitation.weddingDate)}</p>
+              <p className="editorial-welcome-quote">
+                &ldquo;{invitation.welcomeMessage || 'Nos encantaría compartir este día tan especial contigo.'}&rdquo;
+              </p>
+              <p className="editorial-public-note" style={{ fontStyle: 'italic', color: 'var(--accent-color, #7A1C2E)' }}>
+                La confirmación se realiza mediante el enlace personalizado enviado a cada familia.
+              </p>
+            </div>
+          </section>
 
-        <p className="welcome-text">
-          Nos encantaría compartir este día tan especial contigo.
-        </p>
+          <section className="editorial-card locations-card">
+            <h2 className="moment-title">CELEBRACIÓN</h2>
+            <p className="moment-venue-name">{invitation.venueName || 'Lugar por confirmar'}</p>
+            <p className="moment-venue-address">{invitation.venueAddress || 'Dirección por confirmar'}</p>
+          </section>
+        </div>
+      ) : (
+        <>
+          <section className="invitation-hero">
+            <p className="eyebrow">Nuestra boda</p>
+            <h1>{invitation.partnerOneName} <span>&amp;</span> {invitation.partnerTwoName}</h1>
+            <p className="invitation-title">{invitation.title}</p>
+            <p className="wedding-date">{formatDate(invitation.weddingDate)}</p>
 
-        <p className="private-invitation-note">
-          La confirmación se realiza mediante el enlace personalizado enviado a cada familia.
-        </p>
-      </section>
+            <div className="hero-divider" aria-hidden="true">✦</div>
 
-      <section className="details-section">
-        <p className="eyebrow">Celebración</p>
-        <h2>El lugar de nuestro encuentro</h2>
-        <p>{invitation.venueName || 'Lugar por confirmar'}</p>
-        <p className="muted-text">{invitation.venueAddress || 'Dirección por confirmar'}</p>
-      </section>
+            <p className="welcome-text">
+              {invitation.welcomeMessage || 'Nos encantaría compartir este día tan especial contigo.'}
+            </p>
+
+            <p className="private-invitation-note">
+              La confirmación se realiza mediante el enlace personalizado enviado a cada familia.
+            </p>
+          </section>
+
+          <section className="details-section">
+            <p className="eyebrow">Celebración</p>
+            <h2>El lugar de nuestro encuentro</h2>
+            <p>{invitation.venueName || 'Lugar por confirmar'}</p>
+            <p className="muted-text">{invitation.venueAddress || 'Dirección por confirmar'}</p>
+          </section>
+        </>
+      )}
     </main>
   )
 }
