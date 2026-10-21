@@ -30,12 +30,35 @@ public class WeddingAudioService {
             Files.createDirectories(folder);
             String extension = file.getOriginalFilename() != null && file.getOriginalFilename().contains(".") ? file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf('.')).toLowerCase() : ".mp3";
             String name = UUID.randomUUID() + extension;
-            Files.copy(file.getInputStream(), folder.resolve(name), StandardCopyOption.REPLACE_EXISTING);
+            byte[] bytes = file.getBytes();
+            Files.write(folder.resolve(name), bytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             WeddingAudio audio = audioRepository.findByWeddingId(weddingId).orElseGet(WeddingAudio::new);
-            audio.setWedding(wedding); audio.setAudioUrl("/uploads/weddings/" + weddingId + "/" + name); audio.setTitle(title); audio.setFileName(file.getOriginalFilename()); audio.setEnabled(true);
+            audio.setWedding(wedding);
+            audio.setAudioUrl("/uploads/weddings/" + weddingId + "/" + name);
+            audio.setTitle(title);
+            audio.setFileName(file.getOriginalFilename());
+            audio.setContentType(file.getContentType());
+            audio.setAudioBytes(bytes);
+            audio.setEnabled(true);
             return toResponse(audioRepository.save(audio));
         } catch (IOException e) { throw new IllegalStateException("No se pudo guardar el audio", e); }
     }
+
+    public void delete(Long weddingId, String email) {
+        owned(weddingId, email);
+        audioRepository.findByWeddingId(weddingId).ifPresent(audio -> {
+            try {
+                if (audio.getAudioUrl() != null && audio.getAudioUrl().startsWith("/uploads/")) {
+                    Path file = Files.exists(Paths.get("planner"))
+                            ? Paths.get("planner", audio.getAudioUrl().substring(1))
+                            : Paths.get(audio.getAudioUrl().substring(1));
+                    Files.deleteIfExists(file);
+                }
+            } catch (Exception ignored) {}
+            audioRepository.delete(audio);
+        });
+    }
+
     private Wedding owned(Long id, String email) { Wedding w = weddingRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Boda no encontrada")); if (!w.getOwnerUser().getEmail().equalsIgnoreCase(email)) throw new AccessDeniedException("No tienes permiso"); return w; }
     private WeddingAudioResponse toResponse(WeddingAudio a) { return new WeddingAudioResponse(a.getAudioUrl(), a.getTitle(), a.getFileName(), a.getEnabled()); }
 }

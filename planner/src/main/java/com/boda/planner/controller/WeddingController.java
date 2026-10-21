@@ -53,4 +53,9 @@ public class WeddingController {
     public Map<String, String> uploadDressCodeImage(@PathVariable Long weddingId, @RequestPart("file") MultipartFile file, Authentication authentication) {
         return Map.of("imageUrl", weddingService.uploadDressCodeImage(weddingId, file, authentication.getName()));
     }
+
+    @PostMapping(value = "/{weddingId}/logo/upload", consumes = "multipart/form-data")
+    public Map<String, String> uploadCustomLogo(@PathVariable Long weddingId, @RequestPart("file") MultipartFile file, Authentication authentication) {
+        return Map.of("imageUrl", weddingService.uploadCustomLogo(weddingId, file, authentication.getName()));
+    }
 }

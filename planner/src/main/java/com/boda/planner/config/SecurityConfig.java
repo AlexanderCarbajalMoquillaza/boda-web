@@ -45,12 +45,12 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint((request, response, exception) -> {
                             response.setStatus(401);
-                            response.setContentType("application/json");
+                            response.setContentType("application/json;charset=UTF-8");
                             response.getWriter().write("{\"status\":401,\"message\":\"No hay una sesión JWT válida\"}");
                         })
                         .accessDeniedHandler((request, response, exception) -> {
                             response.setStatus(403);
-                            response.setContentType("application/json");
+                            response.setContentType("application/json;charset=UTF-8");
                             response.getWriter().write("{\"status\":403,\"message\":\"El usuario autenticado no tiene permiso para esta boda\"}");
                         }))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -58,6 +58,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .anyRequest().authenticated()
                 )

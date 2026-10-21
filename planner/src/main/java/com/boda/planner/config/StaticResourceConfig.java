@@ -8,7 +8,15 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class StaticResourceConfig implements WebMvcConfigurer {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        java.nio.file.Path p1 = java.nio.file.Paths.get("uploads").toAbsolutePath().normalize();
+        java.nio.file.Path p2 = java.nio.file.Paths.get("planner", "uploads").toAbsolutePath().normalize();
         registry.addResourceHandler("/uploads/**")
-                .addResourceLocations("file:planner/uploads/", "file:uploads/");
+                .addResourceLocations(
+                        p1.toUri().toString(),
+                        p2.toUri().toString(),
+                        "file:/app/uploads/",
+                        "file:uploads/",
+                        "file:planner/uploads/"
+                );
     }
 }

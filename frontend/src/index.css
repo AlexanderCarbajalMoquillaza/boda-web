@@ -91,12 +91,16 @@ h2 { margin-bottom: 24px; font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 400;
 .muted-text { color: #8a9691; }
 .status-screen, .code-page { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #f4f1ea; text-align: center; }
 .error-screen { color: #934f45; }
-.invitation-cover { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; overflow: hidden; padding: 24px; background-color: var(--invitation-background, #f4f1ea); animation: cover-arrive 700ms ease both; }
+.invitation-cover { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; overflow: hidden; padding: 24px; background-color: var(--invitation-background, #f4f1ea); opacity: 1; }
 .invitation-cover::before { content: ''; position: absolute; inset: 0; background: color-mix(in srgb, var(--invitation-background, #f4f1ea) 92%, white); }
+.invitation-body-hidden { opacity: 0 !important; visibility: hidden !important; pointer-events: none !important; max-height: 0 !important; overflow: hidden !important; }
 .invitation-cover-content { position: relative; z-index: 2; width: min(100%, 540px); padding: 28px 18px 34px; text-align: center; }
+.eyebrow-enhanced { font-size: clamp(0.95rem, 2.5vw, 1.25rem) !important; letter-spacing: 0.25em !important; font-weight: 600; text-transform: uppercase; margin-bottom: 12px; }
 .cover-couple { display: flex; align-items: baseline; justify-content: center; max-width: 540px; margin: 8px auto 22px; gap: .22em; font-family: 'Boheme Floral', 'Snell Roundhand', 'Segoe Script', 'Brush Script MT', cursive; font-size: clamp(2.4rem, 8.4vw, 4.85rem); font-weight: 400; line-height: 1; }
+.cover-couple-enhanced { font-size: clamp(2.9rem, 9.2vw, 5rem) !important; gap: .25em; }
 .cover-name { display: inline-block; padding: 0 .02em; white-space: nowrap; letter-spacing: .015em; }
 .cover-ampersand { display: inline-block; color: var(--accent-color, #b79a62); font-family: Georgia, 'Times New Roman', serif; font-size: .68em; font-style: italic; line-height: 1; }
+.cover-ampersand-unified { display: inline-block; color: var(--accent-color, #b79a62); font-family: inherit; font-size: 0.88em; font-weight: inherit; margin: 0 0.15em; line-height: 1; }
 .cover-ampersand + .cover-name { margin-left: .14em; }
 .cover-date { margin: 0; color: #68736f; font-family: Arial, sans-serif; font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase; }
 .cover-family { margin: 24px 0 4px; color: #34403d; font-family: 'Boheme Floral', 'Snell Roundhand', 'Segoe Script', cursive; font-size: clamp(2.25rem, 5.4vw, 2.8rem); letter-spacing: .02em; }
@@ -109,12 +113,12 @@ h2 { margin-bottom: 24px; font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 400;
 .envelope-image-wrap { position: relative; display: block; width: 100%; aspect-ratio: 735 / 419; }
 .envelope-reference-image { display: block; width: 100%; height: 100%; object-fit: cover; box-shadow: 0 17px 26px rgba(52, 64, 61, 0.2); }
 .envelope-initials { position: absolute; top: 27%; left: 50%; transform: translate(-50%, -50%); color: rgba(91, 72, 53, .86); font-family: 'Boheme Floral', 'Snell Roundhand', 'Segoe Script', cursive; font-size: clamp(1.05rem, 3vw, 1.5rem); letter-spacing: .12em; line-height: 1; white-space: nowrap; text-shadow: 0 1px 1px rgba(255, 253, 251, .85); }
-.cover-floral-image { position: absolute; z-index: 1; pointer-events: none; object-fit: contain; mix-blend-mode: multiply; }
+.cover-floral-image { position: absolute; z-index: 1; pointer-events: none; object-fit: contain; }
 .cover-floral-bouquet { top: calc(50% - 20px); left: calc(50% - 315px); width: min(30vw, 210px); max-height: 220px; transform: rotate(-13deg); }
-.cover-floral-vertical { right: 12px; bottom: 14px; width: min(20vw, 155px); max-height: 270px; transform: rotate(7deg); mix-blend-mode: normal; }
-.cover-floral-roses-cluster { top: 10px; left: 18px; width: min(16vw, 125px); max-height: 205px; transform: rotate(-7deg) scaleX(-1); opacity: .86; mix-blend-mode: normal; }
+.cover-floral-vertical { right: 12px; bottom: 14px; width: min(20vw, 155px); max-height: 270px; transform: rotate(7deg); }
+.cover-floral-roses-cluster { top: 10px; left: 18px; width: min(16vw, 125px); max-height: 205px; transform: rotate(-7deg) scaleX(-1); opacity: .86; }
+.invitation-cover.is-opening { opacity: 0; pointer-events: none; transition: opacity 600ms ease; }
 .invitation-cover.is-opening .envelope-visual { transform: perspective(700px) translateY(-18px) rotateX(8deg) scale(.97); opacity: 0; }
-@keyframes cover-arrive { from { opacity: 0; } to { opacity: 1; } }
 .countdown { display: flex; justify-content: center; gap: 10px; margin: 24px auto 0; }
 .countdown div { display: grid; min-width: 58px; gap: 4px; padding: 10px 7px; border-top: 1px solid color-mix(in srgb, var(--accent-color, #b79a62) 55%, white); border-bottom: 1px solid color-mix(in srgb, var(--accent-color, #b79a62) 55%, white); }
 .countdown strong { color: var(--accent-color, #b79a62); font-family: Georgia, serif; font-size: 1.35rem; font-weight: 400; }
@@ -1630,4 +1634,1281 @@ h2 { margin-bottom: 24px; font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 400;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
 
-@media print { .invitation-cover, .editorial-cover-screen, .music-control, .editorial-floating-music, .personalized-page > *:not(.print-summary) { display: none !important; } .personalized-page { background: #fff; } .print-summary { display: block; max-width: 760px; min-height: 980px; margin: 0 auto; padding: 58px 64px; border: 10px solid #eef6f3; outline: 1px solid #b8ccc7; outline-offset: -22px; color: #34403d; background: #fffdfb; font-family: Arial, sans-serif; } .print-summary .eyebrow { margin-bottom: 22px; color: #628f85; font-size: 11px; letter-spacing: 0.2em; } .print-summary h1, .print-summary h2 { font-family: Georgia, serif; font-weight: 400; } .print-summary h1 { margin-bottom: 8px; font-size: 38px; line-height: 1.1; } .print-summary h1 span { color: #b79a62; font-style: italic; } .print-summary > p { color: #68736f; line-height: 1.6; } .print-summary h2 { margin: 34px 0 12px; padding-bottom: 8px; border-bottom: 1px solid #d9e2df; font-size: 21px; } .print-summary ul { margin: 0; padding-left: 22px; } .print-summary li { margin: 8px 0; color: #68736f; } }
+/* ============================================================
+   ELEMENTOS DECORATIVOS ENTRE CARDS
+   ============================================================ */
+.cards-floral-divider {
+  display: block;
+  width: min(85%, 260px);
+  height: auto;
+  margin: 28px auto;
+  opacity: 0.95;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.05));
+  pointer-events: none;
+}
+
+/* ============================================================
+   TARJETA DE REGALOS LUXURY (REDISEÑADA Y ELEGANTE)
+   ============================================================ */
+.gift-luxury-card {
+  text-align: center;
+  padding: 40px 24px;
+}
+.gift-card-icon {
+  margin-bottom: 12px;
+  color: var(--accent-color, #7A1C2E);
+  display: flex;
+  justify-content: center;
+}
+.gift-card-lead {
+  max-width: 460px;
+  margin: 0 auto 28px;
+  color: #555555;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+.gift-options-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 480px;
+  margin: 0 auto;
+}
+.gift-box-item {
+  background: color-mix(in srgb, var(--invitation-background, #f4f1ea) 45%, #ffffff);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 14px;
+  padding: 20px 18px;
+  text-align: left;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+}
+.gift-box-header {
+  margin-bottom: 8px;
+}
+.gift-pill-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background: var(--accent-color, #7A1C2E);
+  color: #ffffff;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  border-radius: 999px;
+  text-transform: uppercase;
+}
+.gift-box-text {
+  margin: 0;
+  color: #4a5553;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.banking-list-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+.banking-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+}
+.banking-type-label {
+  margin: 0 0 2px;
+  font-weight: 700;
+  color: var(--accent-color, #7A1C2E);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.banking-account-number {
+  margin: 0;
+  font-family: monospace, sans-serif;
+  font-size: 0.92rem;
+  color: #222222;
+  word-break: break-all;
+}
+.banking-copy-action-btn {
+  padding: 6px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: var(--accent-color, #7A1C2E);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 180ms ease;
+}
+.banking-copy-action-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.gift-registry-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  background: transparent;
+  color: var(--accent-color, #7A1C2E);
+  border: 2px solid var(--accent-color, #7A1C2E);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-decoration: none;
+  transition: all 200ms ease;
+}
+.gift-registry-action-btn:hover {
+  background: var(--accent-color, #7A1C2E);
+  color: #ffffff;
+}
+
+/* ============================================================
+   BOTÓN PROMINENTE DE DESCARGA DE PASE DE ACCESO (PDF)
+   ============================================================ */
+.access-pass-cta-wrap {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+}
+.access-pass-prominent-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 380px;
+  padding: 15px 26px;
+  background: var(--accent-color, #6FA6B8);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  transition: all 220ms ease;
+  margin: 14px auto 0;
+}
+.access-pass-prominent-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.08);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================================
+   PASE OFICIAL DE ACCESO IMPRIMIBLE (PDF VIP)
+   ============================================================ */
+.print-access-pass {
+  display: none;
+}
+
+@media print {
+  html, body {
+    background: #ffffff !important;
+    color: #111111 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  /* Ocultar absolutamente toda la pantalla visual */
+  .invitation-cover,
+  .editorial-cover-screen,
+  .combo-cover,
+  .music-control,
+  .editorial-floating-music,
+  .editorial-body-container,
+  .boho-scroll-container,
+  .floral-romance-template > *:not(.print-summary),
+  .personalized-page > *:not(.print-access-pass) {
+    display: none !important;
+  }
+
+  .print-access-pass {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    max-width: 620px !important;
+    margin: 20px auto !important;
+    padding: 36px 40px !important;
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+    border: 3px double #775533 !important;
+    border-radius: 8px !important;
+    page-break-inside: avoid !important;
+    font-family: Georgia, 'Times New Roman', serif !important;
+  }
+  .pass-card-sheet {
+    text-align: center;
+  }
+  .pass-badge-pill {
+    display: inline-block;
+    padding: 4px 16px;
+    border: 1px solid #775533;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    font-weight: bold;
+    text-transform: uppercase;
+    color: #775533;
+    margin-bottom: 12px;
+  }
+  .pass-card-nuestra-boda {
+    font-size: 12px;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    margin: 0 0 6px;
+    color: #666;
+  }
+  .pass-card-couple {
+    font-size: 32px;
+    margin: 0 0 8px;
+    font-weight: normal;
+    color: #222;
+  }
+  .pass-card-date {
+    font-size: 14px;
+    letter-spacing: 0.1em;
+    color: #555;
+    margin: 0 0 20px;
+    text-transform: uppercase;
+  }
+  .pass-card-divider {
+    height: 1px;
+    background: #ddd;
+    margin: 18px 0;
+  }
+  .pass-info-row {
+    display: flex;
+    justify-content: space-between;
+    margin: 8px 0;
+    font-size: 14px;
+  }
+  .pass-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #666;
+    font-weight: bold;
+  }
+  .pass-value-highlight {
+    font-size: 16px;
+    color: #111;
+  }
+  .pass-value-badge {
+    font-size: 15px;
+    color: #775533;
+  }
+  .pass-guests-names-list {
+    text-align: left;
+    margin-top: 12px;
+  }
+  .pass-guests-names-list ul {
+    margin: 6px 0 0;
+    padding-left: 20px;
+    font-size: 13px;
+    color: #333;
+  }
+  .pass-card-logistics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    text-align: left;
+    margin: 14px 0;
+  }
+  .pass-logistic-title {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #775533;
+    font-weight: bold;
+  }
+  .pass-logistic-venue {
+    margin: 4px 0 2px;
+    font-size: 13px;
+    font-weight: bold;
+  }
+  .pass-logistic-address {
+    margin: 0;
+    font-size: 12px;
+    color: #666;
+  }
+  .pass-card-footer {
+    margin-top: 24px;
+    text-align: center;
+  }
+  .pass-instruction {
+    font-size: 11px;
+    font-style: italic;
+    color: #777;
+    margin: 0 0 12px;
+  }
+  .pass-validation-barcode {
+    display: inline-block;
+    padding: 6px 14px;
+    background: #f4f4f4;
+    border: 1px dashed #999;
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+  }
+}
+
+/* ============================================================
+   PLANTILLA 4: BOHO RÚSTICO & TERRACOTA (ESTRUCTURA DE CAPTURA)
+   ============================================================ */
+.theme-boho-rustic {
+  background-color: var(--invitation-background, #f5f0eb);
+}
+.boho-scroll-container {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px 14px 60px;
+  display: flex;
+  justify-content: center;
+}
+.boho-column-sheet {
+  position: relative;
+  width: min(100%, 460px);
+  background: color-mix(in srgb, var(--invitation-background, #f5f0eb) 75%, #ffffff);
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+  padding-bottom: 40px;
+  text-align: center;
+}
+.boho-top-floral-wrap {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+}
+.boho-corner-img {
+  width: clamp(140px, 45vw, 220px);
+  height: auto;
+  pointer-events: none;
+}
+.boho-quote-section {
+  padding: 10px 24px 20px;
+}
+.boho-verse-text {
+  font-family: Georgia, 'Times New Roman', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #4a4039;
+  margin: 0 0 6px;
+}
+.boho-verse-cite {
+  font-family: Arial, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent-color, #c17a56);
+  margin: 0;
+  font-weight: 600;
+}
+.boho-monogram-section {
+  margin: 20px auto 26px;
+}
+.boho-monogram-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 26px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  font-family: Georgia, serif;
+  font-size: 2.2rem;
+  color: #2b221d;
+  letter-spacing: 0.08em;
+}
+.mono-bar {
+  opacity: 0.35;
+  font-weight: 300;
+}
+.boho-we-marry-text {
+  margin: 12px 0 0;
+  font-family: Arial, sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.3em;
+  font-weight: 700;
+  color: #2b221d;
+  text-transform: uppercase;
+}
+/* Fotos con efecto rasgado (Deckle Edge) */
+.boho-deckle-photo-wrap {
+  width: 100%;
+  margin: 24px 0;
+  padding: 0 16px;
+}
+.boho-torn-paper-frame {
+  position: relative;
+  overflow: hidden;
+  clip-path: polygon(0% 1.2%, 2% 0.2%, 5% 1.4%, 9% 0.1%, 13% 1.1%, 17% 0%, 22% 1.3%, 26% 0.3%, 31% 1.2%, 36% 0.1%, 41% 1.3%, 46% 0.2%, 51% 1.2%, 56% 0.1%, 61% 1.3%, 66% 0.2%, 71% 1.2%, 76% 0.1%, 81% 1.3%, 86% 0.2%, 91% 1.2%, 96% 0.1%, 100% 0.8%, 100% 98.8%, 98% 99.9%, 94% 98.6%, 90% 99.8%, 85% 98.7%, 80% 99.9%, 75% 98.8%, 70% 99.7%, 65% 98.6%, 60% 99.8%, 55% 98.7%, 50% 99.9%, 45% 98.6%, 40% 99.8%, 35% 98.7%, 30% 99.9%, 25% 98.6%, 20% 99.8%, 15% 98.7%, 10% 99.9%, 5% 98.6%, 0% 100%);
+  filter: drop-shadow(0 10px 18px rgba(43, 34, 29, 0.16));
+}
+.boho-torn-img {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+  display: block;
+}
+.boho-parents-section {
+  padding: 16px 22px;
+}
+.boho-parents-lead {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: #665b52;
+  margin: 0 0 16px;
+}
+.boho-parents-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  text-align: center;
+}
+.parents-role {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2b221d;
+  margin: 0 0 4px;
+}
+.parents-names {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 0.85rem;
+  color: #5d534b;
+  margin: 0;
+}
+.boho-couple-hero-section {
+  position: relative;
+  padding: 24px 18px;
+}
+.boho-nosotros-label {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 0.9rem;
+  color: #776a60;
+  margin: 0 0 10px;
+}
+.boho-names-flow-wrap {
+  position: relative;
+  display: inline-block;
+  width: 100%;
+}
+.boho-names-side-cluster {
+  position: absolute;
+  top: 50%;
+  width: min(85px, 22vw);
+  opacity: 0.88;
+  pointer-events: none;
+}
+.boho-names-side-cluster.cluster-left {
+  left: -12px;
+  transform: translateY(-50%) scaleX(-1);
+}
+.boho-names-side-cluster.cluster-right {
+  right: -12px;
+  transform: translateY(-50%);
+}
+.boho-script-couple {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Boheme Floral', 'Snell Roundhand', 'Segoe Script', cursive;
+  font-size: clamp(2.8rem, 8.5vw, 4rem);
+  font-weight: 400;
+  color: #2b221d;
+  margin: 0;
+  line-height: 1.1;
+}
+.script-amp {
+  font-size: 0.7em;
+  color: var(--accent-color, #c17a56);
+  margin: 2px 0;
+}
+.boho-honor-invitation-text {
+  max-width: 340px;
+  margin: 18px auto 0;
+  font-family: Georgia, serif;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #5d534b;
+}
+.boho-date-card-section {
+  margin: 24px auto;
+  padding: 0 24px;
+}
+.boho-date-minimal-card {
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+  padding: 14px 10px;
+}
+.date-month-title {
+  display: block;
+  font-family: Arial, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  font-weight: 600;
+  color: #776a60;
+  margin-bottom: 6px;
+}
+.date-numbers-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  font-family: Georgia, serif;
+}
+.date-weekday {
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  color: #5d534b;
+}
+.date-day-big {
+  font-size: 2.8rem;
+  line-height: 1;
+  color: #2b221d;
+}
+.date-year {
+  font-size: 0.85rem;
+  letter-spacing: 0.15em;
+  color: #5d534b;
+}
+.boho-countdown-section {
+  margin: 20px auto;
+}
+.boho-countdown-title {
+  font-family: Arial, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  font-weight: 600;
+  color: #776a60;
+  margin: 0 0 8px;
+}
+.boho-countdown-numbers {
+  font-family: Georgia, serif;
+  font-size: 1.8rem;
+  color: var(--accent-color, #c17a56);
+  letter-spacing: 0.05em;
+}
+.boho-countdown-numbers .colon {
+  margin: 0 4px;
+  opacity: 0.5;
+}
+.boho-countdown-labels {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  font-size: 0.72rem;
+  color: #776a60;
+  margin-top: 4px;
+}
+.boho-section-floral-divider {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  margin: 14px 0;
+}
+.boho-section-floral-divider img {
+  width: min(80%, 250px);
+  height: auto;
+  opacity: 0.92;
+}
+.boho-venues-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 16px 20px;
+}
+.boho-venue-block {
+  text-align: center;
+}
+.boho-venue-time-badge {
+  font-family: Arial, sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: var(--accent-color, #c17a56);
+  margin-bottom: 4px;
+}
+.boho-venue-title {
+  font-family: Arial, sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+  color: #2b221d;
+  margin: 0 0 6px;
+}
+.boho-venue-name {
+  font-family: Georgia, serif;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #3d332d;
+  margin: 0 0 4px;
+}
+.boho-venue-address {
+  font-size: 0.85rem;
+  color: #665b52;
+  margin: 0 0 14px;
+}
+.boho-terracotta-btn {
+  display: inline-block;
+  padding: 10px 24px;
+  background: var(--accent-color, #c17a56);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-family: Arial, sans-serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(193, 122, 86, 0.25);
+  transition: all 180ms ease;
+}
+.boho-terracotta-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+.boho-itinerary-section {
+  padding: 24px 20px;
+}
+.boho-itinerary-heading {
+  font-family: Arial, sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.25em;
+  font-weight: 700;
+  color: #2b221d;
+  margin: 0 0 26px;
+}
+.boho-timeline-vertical {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+.boho-timeline-vertical::before {
+  content: '';
+  position: absolute;
+  top: 15px;
+  bottom: 15px;
+  width: 1px;
+  background: #c17a56;
+  opacity: 0.4;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+}
+.boho-timeline-node {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: color-mix(in srgb, var(--invitation-background, #f5f0eb) 75%, #ffffff);
+  padding: 4px 14px;
+}
+.node-icon-wrap {
+  color: var(--accent-color, #c17a56);
+  margin-bottom: 4px;
+}
+.node-title {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  font-size: 0.76rem;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+  color: #2b221d;
+}
+.node-time {
+  margin: 2px 0 0;
+  font-size: 0.72rem;
+  color: #776a60;
+}
+.boho-dresscode-section {
+  padding: 24px 20px;
+}
+.boho-dresscode-heading {
+  font-family: Arial, sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.25em;
+  font-weight: 700;
+  color: #2b221d;
+  margin: 0 0 4px;
+}
+.boho-dresscode-subtitle {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-size: 1rem;
+  color: #5d534b;
+  margin: 0 0 16px;
+}
+.boho-dresscode-silhouettes {
+  color: var(--accent-color, #c17a56);
+  margin-bottom: 14px;
+  display: flex;
+  justify-content: center;
+}
+.boho-palette-row {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin: 14px auto;
+  flex-wrap: wrap;
+}
+.boho-palette-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  border: 2px solid #ffffff;
+}
+.boho-dresscode-note {
+  font-size: 0.82rem;
+  color: #776a60;
+  margin: 12px auto 0;
+  max-width: 320px;
+  line-height: 1.5;
+}
+.boho-gifts-section {
+  padding: 24px 20px;
+}
+.boho-gift-icon {
+  color: var(--accent-color, #c17a56);
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.boho-gifts-heading {
+  font-family: Arial, sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.25em;
+  font-weight: 700;
+  color: #2b221d;
+  margin: 0 0 8px;
+}
+.boho-gifts-lead {
+  font-family: Georgia, serif;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: #5d534b;
+  margin: 0 auto 20px;
+  max-width: 360px;
+}
+.boho-gift-cards-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 380px;
+  margin: 0 auto;
+}
+.boho-gift-card {
+  background: #ffffff;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  text-align: left;
+}
+.boho-gift-tag {
+  font-family: Arial, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  color: var(--accent-color, #c17a56);
+  margin: 0 0 6px;
+}
+.boho-gift-info {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #4a4039;
+}
+.boho-bank-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 0;
+}
+.bank-meta strong {
+  display: block;
+  font-size: 0.8rem;
+  color: #2b221d;
+}
+.bank-meta span {
+  font-size: 0.82rem;
+  font-family: monospace;
+  color: #665b52;
+}
+.boho-copy-btn {
+  padding: 4px 10px;
+  background: var(--accent-color, #c17a56);
+  color: #ffffff;
+  border: none;
+  border-radius: 3px;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+.boho-rsvp-section {
+  padding: 24px 20px;
+}
+.boho-rsvp-icon {
+  color: var(--accent-color, #c17a56);
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+.boho-rsvp-heading {
+  font-family: Arial, sans-serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.25em;
+  font-weight: 700;
+  color: #2b221d;
+  margin: 0 0 6px;
+}
+.boho-rsvp-lead {
+  font-size: 0.85rem;
+  color: #665b52;
+  margin: 0 0 16px;
+}
+.boho-rsvp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 380px;
+  margin: 0 auto;
+  text-align: left;
+}
+.boho-reservation-status {
+  padding: 10px 14px;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  color: #4a4039;
+  text-align: center;
+}
+.boho-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #4a4039;
+}
+.boho-form-field input,
+.boho-form-field select,
+.boho-form-field textarea {
+  padding: 10px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+  background: #ffffff;
+  font-size: 0.9rem;
+}
+.boho-submit-btn {
+  padding: 13px;
+  background: var(--accent-color, #c17a56);
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(193, 122, 86, 0.3);
+  margin-top: 6px;
+}
+.boho-farewell-section {
+  padding: 30px 20px 10px;
+}
+.boho-farewell-eyebrow {
+  font-family: Arial, sans-serif;
+  font-size: 0.75rem;
+  letter-spacing: 0.25em;
+  font-weight: 600;
+  color: #776a60;
+  margin: 0 0 10px;
+}
+.boho-thankyou-script {
+  font-family: 'Boheme Floral', 'Snell Roundhand', 'Segoe Script', cursive;
+  font-size: clamp(2.6rem, 7.5vw, 3.8rem);
+  font-weight: 400;
+  color: #2b221d;
+  margin: 0 0 18px;
+}
+.boho-bottom-cluster img {
+  width: min(85%, 260px);
+  height: auto;
+  pointer-events: none;
+}
+
+/* ============================================================
+   PANEL ADMIN: MÚSICA & SELECTOR 4 PLANTILLAS
+   ============================================================ */
+.current-audio-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 20px 22px;
+  margin: 18px 0 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+}
+.current-audio-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.music-active-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: #eef6f3;
+  color: #2a6a57;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+.delete-audio-btn {
+  padding: 6px 14px;
+  background: #fff5f5;
+  color: #c53030;
+  border: 1px solid #feb2b2;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+.delete-audio-btn:hover {
+  background: #c53030;
+  color: #ffffff;
+}
+.audio-card-title {
+  margin: 0 0 4px;
+  font-size: 1.1rem;
+  color: #222222;
+}
+.audio-card-filename {
+  margin: 0 0 12px;
+  font-size: 0.82rem;
+  color: #777777;
+}
+.admin-preview-audio-player {
+  width: 100%;
+  height: 38px;
+  margin-bottom: 8px;
+}
+.audio-change-tip {
+  margin: 12px 0 0;
+  font-size: 0.82rem;
+  color: #666666;
+  font-style: italic;
+}
+.no-audio-state-card {
+  background: #fdfaf7;
+  border: 1px dashed #d5c8be;
+  border-radius: 12px;
+  padding: 30px 20px;
+  text-align: center;
+  margin: 18px 0 24px;
+}
+.no-audio-icon {
+  font-size: 2.2rem;
+  display: block;
+  margin-bottom: 8px;
+}
+.no-audio-state-card h4 {
+  margin: 0 0 6px;
+  font-size: 1.05rem;
+  color: #333333;
+}
+.no-audio-state-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #777777;
+}
+.four-templates-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 16px !important;
+}
+.combo-badge {
+  background: #3b82f6 !important;
+  color: #ffffff !important;
+}
+.boho-badge {
+  background: #d97706 !important;
+  color: #ffffff !important;
+}
+.combo-sample {
+  background: linear-gradient(135deg, #fdf6ec, #eff6ff) !important;
+  color: #1e3a8a !important;
+}
+.boho-sample {
+  background: linear-gradient(135deg, #fff7ed, #fef3c7) !important;
+  color: #78350f !important;
+}
+
+/* ============================================================
+   ESTILOS SEA GLASS & ESPACIADOS DE PORTADA REFINADOS
+   ============================================================ */
+.cover-eyebrow-higher {
+  margin-bottom: 24px !important;
+  font-size: clamp(1rem, 2.8vw, 1.35rem) !important;
+  letter-spacing: 0.22em !important;
+}
+.cover-guest-family-lower {
+  margin-top: 36px !important;
+}
+.cover-floral-tl {
+  top: 0;
+  left: 0;
+  width: min(34vw, 240px);
+  max-height: 240px;
+}
+.cover-floral-br {
+  bottom: 0;
+  right: 0;
+  width: min(34vw, 240px);
+  max-height: 240px;
+}
+.cover-floral-bottom {
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(44vw, 300px);
+  max-height: 220px;
+  opacity: 0.9;
+}
+
+/* ============================================================
+   REPRODUCTOR DE MÚSICA INLINE LUXURY (Dale play a nuestra canción)
+   ============================================================ */
+.wedding-music-player-widget {
+  width: min(94%, 370px);
+  margin: 24px auto;
+  padding: 18px 22px;
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 18px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+.music-player-prompt {
+  font-family: 'Playfair Display', 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.08rem;
+  font-style: italic;
+  color: #3b322a;
+  margin: 0 0 14px;
+  letter-spacing: 0.02em;
+}
+.music-player-progress-container {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+.music-player-track {
+  position: relative;
+  width: 100%;
+  height: 3px;
+  background: #d4dedc;
+  border-radius: 4px;
+}
+.music-player-fill {
+  height: 100%;
+  background: var(--accent-color, #6FA6B8);
+  border-radius: 4px;
+  transition: width 100ms linear;
+}
+.music-player-scrubber {
+  position: absolute;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  background: var(--accent-color, #6FA6B8);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  transition: left 100ms linear;
+}
+.music-player-range-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  margin: 0;
+}
+.music-player-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+}
+.music-ctrl-btn {
+  background: none;
+  border: none;
+  color: #71807e;
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 180ms ease, transform 180ms ease;
+}
+.music-ctrl-btn:hover {
+  color: var(--accent-color, #6FA6B8);
+  transform: scale(1.12);
+}
+.music-ctrl-btn.active {
+  color: var(--accent-color, #6FA6B8);
+}
+.music-play-circle-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--accent-color, #6FA6B8);
+  color: #ffffff;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(111, 166, 184, 0.4);
+  transition: transform 200ms ease, box-shadow 200ms ease, filter 200ms ease;
+}
+.music-play-circle-btn:hover {
+  transform: scale(1.08);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 18px rgba(111, 166, 184, 0.5);
+}
+.music-player-song-title {
+  margin: 10px 0 0;
+  font-size: 0.78rem;
+  color: #7a8684;
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   ILUSTRACIÓN DE CÓDIGO DE VESTIMENTA EN ALTA CALIDAD
+   ============================================================ */
+.dresscode-illustration-wrapper {
+  margin: 20px auto 14px;
+  text-align: center;
+  max-width: 210px;
+}
+.dresscode-illustration-image {
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  filter: drop-shadow(0 4px 14px rgba(0, 0, 0, 0.08));
+}
+
+/* ============================================================
+   BENDICIÓN DE FAMILIAS & PADRES Y PADRINOS
+   ============================================================ */
+.boho-parents-section, .family-blessing-card, .parents-blessing-section {
+  margin: 28px 0;
+  text-align: center;
+}
+.boho-parents-lead {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 1.05rem;
+  color: #55504a;
+  margin-bottom: 14px;
+}
+.boho-parents-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 18px;
+  margin-top: 12px;
+}
+.parents-block {
+  min-width: 190px;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+}
+.parents-role {
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-color, #6FA6B8);
+  margin: 0 0 6px;
+}
+.parents-names {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.08rem;
+  color: #2b221d;
+  margin: 0;
+}
+.family-inputs-grid {
+  display: grid;
+  gap: 16px;
+  margin-top: 14px;
+}
+.family-col-block {
+  background: #fdfaf7;
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid #ebdcd2;
+}
+
+/* ============================================================
+   LOGO PERSONALIZADO & CITAS BÍBLICAS
+   ============================================================ */
+.custom-couple-logo-box {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 14px auto;
+}
+.custom-couple-logo-img {
+  max-width: 170px;
+  max-height: 95px;
+  object-fit: contain;
+}
+.boho-verse-cite {
+  font-family: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--accent-color, #6FA6B8);
+  margin-top: 8px;
+}
+.timeline-icon-wrap, .venue-card-icon, .moment-sketch {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent-color, #6FA6B8);
+}
+
+

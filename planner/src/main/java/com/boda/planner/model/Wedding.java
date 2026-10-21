@@ -61,6 +61,13 @@ public class Wedding {
     @Column(name = "dress_code_image_url", length = 500)
     private String dressCodeImageUrl;
 
+    @Column(name = "dress_code_image_content_type", length = 100)
+    private String dressCodeImageContentType;
+
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "dress_code_image_bytes", columnDefinition = "bytea")
+    private byte[] dressCodeImageBytes;
+
     @Column(name = "show_dress_code_palette")
     private Boolean showDressCodePalette = false;
 
@@ -118,6 +125,37 @@ public class Wedding {
 
     @Column(name = "template_id", length = 50)
     private String templateId = "FLORAL_ROMANCE";
+
+    @Column(name = "bride_father_name", length = 120)
+    private String brideFatherName;
+
+    @Column(name = "bride_mother_name", length = 120)
+    private String brideMotherName;
+
+    @Column(name = "groom_father_name", length = 120)
+    private String groomFatherName;
+
+    @Column(name = "groom_mother_name", length = 120)
+    private String groomMotherName;
+
+    @Column(name = "godfather_name", length = 120)
+    private String godfatherName;
+
+    @Column(name = "godmother_name", length = 120)
+    private String godmotherName;
+
+    @Column(name = "welcome_citation", length = 120)
+    private String welcomeCitation;
+
+    @Column(name = "custom_logo_url", length = 500)
+    private String customLogoUrl;
+
+    @Column(name = "custom_logo_content_type", length = 100)
+    private String customLogoContentType;
+
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "custom_logo_bytes", columnDefinition = "bytea")
+    private byte[] customLogoBytes;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -225,6 +263,10 @@ public class Wedding {
     public void setDressCodePreset(String dressCodePreset) { this.dressCodePreset = dressCodePreset; }
     public String getDressCodeImageUrl() { return dressCodeImageUrl; }
     public void setDressCodeImageUrl(String dressCodeImageUrl) { this.dressCodeImageUrl = dressCodeImageUrl; }
+    public String getDressCodeImageContentType() { return dressCodeImageContentType; }
+    public void setDressCodeImageContentType(String dressCodeImageContentType) { this.dressCodeImageContentType = dressCodeImageContentType; }
+    public byte[] getDressCodeImageBytes() { return dressCodeImageBytes; }
+    public void setDressCodeImageBytes(byte[] dressCodeImageBytes) { this.dressCodeImageBytes = dressCodeImageBytes; }
     public Boolean getShowDressCodePalette() { return showDressCodePalette; }
     public void setShowDressCodePalette(Boolean showDressCodePalette) { this.showDressCodePalette = showDressCodePalette; }
     public String getDressCodeColorsJson() { return dressCodeColorsJson; }
@@ -281,6 +323,36 @@ public class Wedding {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public String getBrideFatherName() { return brideFatherName; }
+    public void setBrideFatherName(String brideFatherName) { this.brideFatherName = brideFatherName; }
+
+    public String getBrideMotherName() { return brideMotherName; }
+    public void setBrideMotherName(String brideMotherName) { this.brideMotherName = brideMotherName; }
+
+    public String getGroomFatherName() { return groomFatherName; }
+    public void setGroomFatherName(String groomFatherName) { this.groomFatherName = groomFatherName; }
+
+    public String getGroomMotherName() { return groomMotherName; }
+    public void setGroomMotherName(String groomMotherName) { this.groomMotherName = groomMotherName; }
+
+    public String getGodfatherName() { return godfatherName; }
+    public void setGodfatherName(String godfatherName) { this.godfatherName = godfatherName; }
+
+    public String getGodmotherName() { return godmotherName; }
+    public void setGodmotherName(String godmotherName) { this.godmotherName = godmotherName; }
+
+    public String getWelcomeCitation() { return welcomeCitation; }
+    public void setWelcomeCitation(String welcomeCitation) { this.welcomeCitation = welcomeCitation; }
+
+    public String getCustomLogoUrl() { return customLogoUrl; }
+    public void setCustomLogoUrl(String customLogoUrl) { this.customLogoUrl = customLogoUrl; }
+
+    public String getCustomLogoContentType() { return customLogoContentType; }
+    public void setCustomLogoContentType(String customLogoContentType) { this.customLogoContentType = customLogoContentType; }
+
+    public byte[] getCustomLogoBytes() { return customLogoBytes; }
+    public void setCustomLogoBytes(byte[] customLogoBytes) { this.customLogoBytes = customLogoBytes; }
 
     @PrePersist
     public void prePersist() {

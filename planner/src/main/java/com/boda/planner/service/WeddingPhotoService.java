@@ -61,16 +61,19 @@ public class WeddingPhotoService {
             Files.createDirectories(weddingFolder);
             String extension = extensionOf(file.getOriginalFilename());
             String filename = UUID.randomUUID() + extension;
-            Files.copy(file.getInputStream(), weddingFolder.resolve(filename));
+            byte[] bytes = file.getBytes();
+            Files.write(weddingFolder.resolve(filename), bytes, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
 
             WeddingPhoto photo = new WeddingPhoto();
             photo.setWedding(wedding);
             photo.setImageUrl("/uploads/weddings/" + weddingId + "/" + filename);
             photo.setCaption(caption);
             photo.setDisplayOrder(nextOrder(weddingId));
-        photo.setVisible(true);
+            photo.setVisible(true);
             photo.setSection(section == null || section.isBlank() ? "GALLERY" : section);
             photo.setFeatured(false);
+            photo.setContentType(file.getContentType());
+            photo.setImageBytes(bytes);
             return toResponse(photoRepository.save(photo));
         } catch (IOException exception) {
             throw new IllegalStateException("No se pudo guardar la imagen", exception);

@@ -17,6 +17,13 @@ public class WeddingAudio {
     private String fileName;
     @Column(name = "is_enabled", nullable = false)
     private Boolean enabled = true;
+    @Column(name = "content_type", length = 100)
+    private String contentType;
+
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "audio_bytes", columnDefinition = "bytea")
+    private byte[] audioBytes;
+
     @Column(name = "created_at") private LocalDateTime createdAt;
     @Column(name = "updated_at") private LocalDateTime updatedAt;
     @PrePersist public void prePersist() { createdAt = LocalDateTime.now(); updatedAt = LocalDateTime.now(); }
@@ -32,4 +39,8 @@ public class WeddingAudio {
     public void setFileName(String fileName) { this.fileName = fileName; }
     public Boolean getEnabled() { return enabled; }
     public void setEnabled(Boolean enabled) { this.enabled = enabled; }
+    public String getContentType() { return contentType; }
+    public void setContentType(String contentType) { this.contentType = contentType; }
+    public byte[] getAudioBytes() { return audioBytes; }
+    public void setAudioBytes(byte[] audioBytes) { this.audioBytes = audioBytes; }
 }

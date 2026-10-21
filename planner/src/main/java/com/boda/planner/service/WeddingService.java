@@ -72,14 +72,14 @@ public class WeddingService {
 
     public WeddingContentResponse updateContent(Long weddingId, WeddingContentRequest request, String email) {
         Wedding wedding = owned(weddingId, email);
-        wedding.setTitle(request.getTitle());
-        wedding.setPartnerOneName(request.getPartnerOneName());
-        wedding.setPartnerTwoName(request.getPartnerTwoName());
-        wedding.setWeddingDate(request.getWeddingDate());
-        wedding.setVenueName(request.getVenueName());
-        wedding.setVenueAddress(request.getVenueAddress());
-        wedding.setLocationsJson(request.getLocationsJson());
-        wedding.setMaxRegisteredGuests(request.getMaxRegisteredGuests());
+        if (request.getTitle() != null && !request.getTitle().isBlank()) wedding.setTitle(request.getTitle());
+        if (request.getPartnerOneName() != null && !request.getPartnerOneName().isBlank()) wedding.setPartnerOneName(request.getPartnerOneName());
+        if (request.getPartnerTwoName() != null && !request.getPartnerTwoName().isBlank()) wedding.setPartnerTwoName(request.getPartnerTwoName());
+        if (request.getWeddingDate() != null) wedding.setWeddingDate(request.getWeddingDate());
+        wedding.setVenueName(request.getVenueName() != null ? request.getVenueName() : "");
+        wedding.setVenueAddress(request.getVenueAddress() != null ? request.getVenueAddress() : "");
+        wedding.setLocationsJson(request.getLocationsJson() != null ? request.getLocationsJson() : "[]");
+        if (request.getMaxRegisteredGuests() != null) wedding.setMaxRegisteredGuests(request.getMaxRegisteredGuests());
         wedding.setWelcomeMessage(request.getWelcomeMessage());
         wedding.setStoryText(request.getStoryText());
         wedding.setDressCode(request.getDressCode());
@@ -87,24 +87,32 @@ public class WeddingService {
         wedding.setDressCodeImageUrl(request.getDressCodeImageUrl());
         wedding.setShowDressCodePalette(Boolean.TRUE.equals(request.getShowDressCodePalette()));
         wedding.setDressCodeColorsJson(request.getDressCodeColorsJson() != null ? request.getDressCodeColorsJson() : "[]");
-        wedding.setMapUrl(request.getMapUrl());
-        wedding.setGiftRegistryUrl(request.getGiftRegistryUrl());
-        wedding.setGiftOptionsJson(request.getGiftOptionsJson());
-        wedding.setScheduleJson(request.getScheduleJson());
-        wedding.setFaqJson(request.getFaqJson());
-        wedding.setTablesJson(request.getTablesJson());
-        wedding.setShowWelcome(request.getShowWelcome());
-        wedding.setShowStory(request.getShowStory());
-        wedding.setShowSchedule(request.getShowSchedule());
-        wedding.setShowDressCode(request.getShowDressCode());
-        wedding.setShowLocation(request.getShowLocation());
-        wedding.setShowGiftRegistry(request.getShowGiftRegistry());
-        wedding.setShowFaq(request.getShowFaq());
-        wedding.setShowTables(request.getShowTables());
-        wedding.setPrimaryColor(request.getPrimaryColor());
-        wedding.setAccentColor(request.getAccentColor());
-        wedding.setBackgroundColor(request.getBackgroundColor());
-        wedding.setTemplateId(request.getTemplateId() != null && !request.getTemplateId().isBlank() ? request.getTemplateId() : "FLORAL_ROMANCE");
+        wedding.setMapUrl(request.getMapUrl() != null ? request.getMapUrl() : "");
+        wedding.setGiftRegistryUrl(request.getGiftRegistryUrl() != null ? request.getGiftRegistryUrl() : "");
+        wedding.setGiftOptionsJson(request.getGiftOptionsJson() != null ? request.getGiftOptionsJson() : "[]");
+        wedding.setScheduleJson(request.getScheduleJson() != null ? request.getScheduleJson() : "[]");
+        wedding.setFaqJson(request.getFaqJson() != null ? request.getFaqJson() : "[]");
+        wedding.setTablesJson(request.getTablesJson() != null ? request.getTablesJson() : "[]");
+        wedding.setShowWelcome(request.getShowWelcome() != null ? request.getShowWelcome() : true);
+        wedding.setShowStory(request.getShowStory() != null ? request.getShowStory() : true);
+        wedding.setShowSchedule(request.getShowSchedule() != null ? request.getShowSchedule() : true);
+        wedding.setShowDressCode(request.getShowDressCode() != null ? request.getShowDressCode() : true);
+        wedding.setShowLocation(request.getShowLocation() != null ? request.getShowLocation() : true);
+        wedding.setShowGiftRegistry(request.getShowGiftRegistry() != null ? request.getShowGiftRegistry() : true);
+        wedding.setShowFaq(request.getShowFaq() != null ? request.getShowFaq() : true);
+        wedding.setShowTables(request.getShowTables() != null ? request.getShowTables() : false);
+        if (request.getPrimaryColor() != null && !request.getPrimaryColor().isBlank()) wedding.setPrimaryColor(request.getPrimaryColor());
+        if (request.getAccentColor() != null && !request.getAccentColor().isBlank()) wedding.setAccentColor(request.getAccentColor());
+        if (request.getBackgroundColor() != null && !request.getBackgroundColor().isBlank()) wedding.setBackgroundColor(request.getBackgroundColor());
+        if (request.getTemplateId() != null && !request.getTemplateId().isBlank()) wedding.setTemplateId(request.getTemplateId());
+        wedding.setBrideFatherName(request.getBrideFatherName());
+        wedding.setBrideMotherName(request.getBrideMotherName());
+        wedding.setGroomFatherName(request.getGroomFatherName());
+        wedding.setGroomMotherName(request.getGroomMotherName());
+        wedding.setGodfatherName(request.getGodfatherName());
+        wedding.setGodmotherName(request.getGodmotherName());
+        wedding.setWelcomeCitation(request.getWelcomeCitation());
+        wedding.setCustomLogoUrl(request.getCustomLogoUrl());
         return toContentResponse(weddingRepository.save(wedding));
     }
 
@@ -126,13 +134,47 @@ public class WeddingService {
             Files.createDirectories(weddingFolder);
             String extension = extensionOf(file.getOriginalFilename());
             String filename = "dress-code-" + UUID.randomUUID() + extension;
-            Files.copy(file.getInputStream(), weddingFolder.resolve(filename), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            byte[] bytes = file.getBytes();
+            Files.write(weddingFolder.resolve(filename), bytes, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
             String imageUrl = "/uploads/weddings/" + weddingId + "/" + filename;
             wedding.setDressCodeImageUrl(imageUrl);
+            wedding.setDressCodeImageContentType(file.getContentType());
+            wedding.setDressCodeImageBytes(bytes);
             weddingRepository.save(wedding);
             return imageUrl;
         } catch (IOException exception) {
             throw new IllegalStateException("No se pudo guardar la imagen del código de vestimenta", exception);
+        }
+    }
+
+    public String uploadCustomLogo(Long weddingId, MultipartFile file, String email) {
+        Wedding wedding = owned(weddingId, email);
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Debes seleccionar una imagen");
+        }
+        if (file.getSize() > 5 * 1024 * 1024) {
+            throw new IllegalArgumentException("La imagen no puede superar los 5 MB");
+        }
+        if (file.getContentType() == null || !file.getContentType().startsWith("image/")) {
+            throw new IllegalArgumentException("Solo se permiten archivos de imagen");
+        }
+
+        try {
+            Path root = Files.exists(Paths.get("planner")) ? Paths.get("planner", "uploads") : Paths.get("uploads");
+            Path weddingFolder = root.resolve("weddings").resolve(String.valueOf(weddingId));
+            Files.createDirectories(weddingFolder);
+            String extension = extensionOf(file.getOriginalFilename());
+            String filename = "logo-" + UUID.randomUUID() + extension;
+            byte[] bytes = file.getBytes();
+            Files.write(weddingFolder.resolve(filename), bytes, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.TRUNCATE_EXISTING);
+            String imageUrl = "/uploads/weddings/" + weddingId + "/" + filename;
+            wedding.setCustomLogoUrl(imageUrl);
+            wedding.setCustomLogoContentType(file.getContentType());
+            wedding.setCustomLogoBytes(bytes);
+            weddingRepository.save(wedding);
+            return imageUrl;
+        } catch (IOException exception) {
+            throw new IllegalStateException("No se pudo guardar el logo personalizado", exception);
         }
     }
 
@@ -182,6 +224,14 @@ public class WeddingService {
         response.setAccentColor(wedding.getAccentColor());
         response.setBackgroundColor(wedding.getBackgroundColor());
         response.setTemplateId(wedding.getTemplateId() != null ? wedding.getTemplateId() : "FLORAL_ROMANCE");
+        response.setBrideFatherName(wedding.getBrideFatherName());
+        response.setBrideMotherName(wedding.getBrideMotherName());
+        response.setGroomFatherName(wedding.getGroomFatherName());
+        response.setGroomMotherName(wedding.getGroomMotherName());
+        response.setGodfatherName(wedding.getGodfatherName());
+        response.setGodmotherName(wedding.getGodmotherName());
+        response.setWelcomeCitation(wedding.getWelcomeCitation());
+        response.setCustomLogoUrl(wedding.getCustomLogoUrl());
         return response;
     }
 

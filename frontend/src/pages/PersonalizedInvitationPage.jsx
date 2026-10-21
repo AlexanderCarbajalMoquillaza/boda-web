@@ -3,6 +3,8 @@ import { useParams } from 'react-router-dom'
 import { getInvitationBySlug, getPublicAudio, getPublicPhotos, getRsvpByToken, submitRsvp } from '../services/api'
 import { FloralRomanceTemplate } from '../components/FloralRomanceTemplate'
 import { EditorialCardsTemplate } from '../components/EditorialCardsTemplate'
+import { EditorialFloralComboTemplate } from '../components/EditorialFloralComboTemplate'
+import { BohoRusticTemplate } from '../components/BohoRusticTemplate'
 
 function formatDate(date) {
   if (!date) return 'Fecha por confirmar'
@@ -187,7 +189,9 @@ function PersonalizedInvitationPage() {
   if (loading) return <main className="status-screen">Cargando tu invitación...</main>
   if (error && !rsvp) return <main className="status-screen error-screen">{error}</main>
 
-  const isEditorial = invitation?.templateId === 'EDITORIAL_CARDS'
+  const templateId = invitation?.templateId || 'FLORAL_ROMANCE'
+  const isEditorial = templateId === 'EDITORIAL_CARDS' || templateId === 'EDITORIAL_FLORAL_COMBO'
+  const isBoho = templateId === 'BOHO_CHIC_MINIMAL'
 
   const templateProps = {
     invitation,
@@ -230,20 +234,108 @@ function PersonalizedInvitationPage() {
     formatDate,
   }
 
+  const themeClass = isBoho
+    ? 'theme-boho-rustic'
+    : isEditorial
+      ? 'theme-editorial-cards'
+      : 'theme-floral-romance'
+
+  const ceremonyLocation = locations.find((loc) => /ceremonia|iglesia|templo|misa/i.test(loc.type || loc.name)) || locations[0]
+  const receptionLocation = locations.find((loc) => /recepci|fiesta|celebraci|sal[oó]n|jard[ií]n/i.test(loc.type || loc.name)) || locations[1] || locations[0]
+
   return (
     <main
-      className={`personalized-page ${isEditorial ? 'theme-editorial-cards' : 'theme-floral-romance'}`}
+      className={`personalized-page ${themeClass}`}
       style={{
         '--primary-color': invitation.primaryColor || '#7fb3a8',
         '--accent-color': invitation.accentColor || '#b79a62',
         '--invitation-background': invitation.backgroundColor || '#f4f1ea',
       }}
     >
-      {isEditorial ? (
-        <EditorialCardsTemplate {...templateProps} />
-      ) : (
+      {templateId === 'EDITORIAL_CARDS' && <EditorialCardsTemplate {...templateProps} />}
+      {templateId === 'EDITORIAL_FLORAL_COMBO' && <EditorialFloralComboTemplate {...templateProps} />}
+      {templateId === 'BOHO_CHIC_MINIMAL' && <BohoRusticTemplate {...templateProps} />}
+      {templateId !== 'EDITORIAL_CARDS' && templateId !== 'EDITORIAL_FLORAL_COMBO' && templateId !== 'BOHO_CHIC_MINIMAL' && (
         <FloralRomanceTemplate {...templateProps} />
       )}
+
+      {/* SECCIÓN OFICIAL DE PASE DE ACCESO / ENTRADA VIP PARA IMPRESIÓN Y DESCARGA PDF */}
+      <section className="print-access-pass" aria-label="Pase Oficial de Acceso">
+        <div className="pass-card-sheet">
+          <div className="pass-card-corner tl" />
+          <div className="pass-card-corner tr" />
+          <div className="pass-card-corner bl" />
+          <div className="pass-card-corner br" />
+
+          <div className="pass-card-header">
+            <span className="pass-badge-pill">PASE DE ACCESO VIP</span>
+            <p className="pass-card-nuestra-boda">NUESTRA BODA</p>
+            <h1 className="pass-card-couple">
+              {invitation.partnerOneName} &amp; {invitation.partnerTwoName}
+            </h1>
+            <p className="pass-card-date">{formatDate(invitation.weddingDate)}</p>
+          </div>
+
+          <div className="pass-card-divider" />
+
+          <div className="pass-card-guest-info">
+            <div className="pass-info-row">
+              <span className="pass-label">FAMILIA / INVITADO DE HONOR:</span>
+              <strong className="pass-value-highlight">{rsvp?.contactName || 'Invitado Especial'}</strong>
+            </div>
+            <div className="pass-info-row">
+              <span className="pass-label">PASES CONFIRMADOS:</span>
+              <strong className="pass-value-badge">{confirmedCount || rsvp?.maxGuestsAllowed || 1} persona(s)</strong>
+            </div>
+
+            {guests.filter((g) => g.attendanceStatus === 'CONFIRMED' && g.fullName).length > 0 && (
+              <div className="pass-guests-names-list">
+                <span className="pass-label">ASISTENTES REGISTRADOS:</span>
+                <ul>
+                  {guests.filter((g) => g.attendanceStatus === 'CONFIRMED' && g.fullName).map((g, idx) => (
+                    <li key={idx}>{g.fullName}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          <div className="pass-card-divider" />
+
+          <div className="pass-card-logistics">
+            {ceremonyLocation && (
+              <div className="pass-logistic-item">
+                <span className="pass-logistic-title">CEREMONIA</span>
+                <p className="pass-logistic-venue">{ceremonyLocation.name}</p>
+                <p className="pass-logistic-address">{ceremonyLocation.address || visibleAddress}</p>
+              </div>
+            )}
+            {receptionLocation && (
+              <div className="pass-logistic-item">
+                <span className="pass-logistic-title">RECEPCIÓN</span>
+                <p className="pass-logistic-venue">{receptionLocation.name || invitation.venueName}</p>
+                <p className="pass-logistic-address">{receptionLocation.address || visibleAddress}</p>
+              </div>
+            )}
+            {invitation.dressCode && (
+              <div className="pass-logistic-item">
+                <span className="pass-logistic-title">CÓDIGO DE VESTIMENTA</span>
+                <p className="pass-logistic-venue">{invitation.dressCode}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="pass-card-footer">
+            <p className="pass-instruction">
+              Presenta este pase digital o impreso al ingresar al evento. ¡Gracias por acompañarnos!
+            </p>
+            <div className="pass-validation-barcode">
+              <span className="barcode-line" />
+              <span className="barcode-code">PASS-{invitation.invitationSlug || 'BODA'}-{rsvp?.accessCode || token?.slice(0, 8) || 'VIP'}</span>
+            </div>
+          </div>
+        </div>
+      </section>
     </main>
   )
 }

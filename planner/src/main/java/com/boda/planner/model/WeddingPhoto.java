@@ -34,6 +34,13 @@ public class WeddingPhoto {
     @Column(name = "is_featured", nullable = false)
     private Boolean featured = false;
 
+    @Column(name = "content_type", length = 100)
+    private String contentType;
+
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "image_bytes", columnDefinition = "bytea")
+    private byte[] imageBytes;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -67,4 +74,8 @@ public class WeddingPhoto {
     public Boolean getFeatured() { return featured; }
     public void setFeatured(Boolean featured) { this.featured = featured; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public String getContentType() { return contentType; }
+    public void setContentType(String contentType) { this.contentType = contentType; }
+    public byte[] getImageBytes() { return imageBytes; }
+    public void setImageBytes(byte[] imageBytes) { this.imageBytes = imageBytes; }
 }

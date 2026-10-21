@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createAdminUser, createGuestGroup, createWedding, deleteAdminUser, deleteWeddingPhoto, getAdminOverview, getGuestGroups, getImageUrl, getManagedPhotos, getMyWeddings, getPublicAudio, getWeddingContent, login, updateWeddingContent, uploadWeddingAudio, uploadWeddingDressCodeImage, uploadWeddingPhoto } from '../services/api'
+import { createAdminUser, createGuestGroup, createWedding, deleteAdminUser, deleteWeddingAudio, deleteWeddingPhoto, getAdminOverview, getGuestGroups, getImageUrl, getManagedPhotos, getMyWeddings, getPublicAudio, getWeddingContent, login, updateWeddingContent, uploadWeddingAudio, uploadWeddingDressCodeImage, uploadWeddingPhoto, uploadWeddingLogo } from '../services/api'
 
 const photoSections = [
   ['HERO', 'Portada'],
@@ -33,7 +33,7 @@ function parseDressCodeColors(json) {
   return defaultDressCodeColors
 }
 
-const emptyContent = { title: '', partnerOneName: '', partnerTwoName: '', weddingDate: '', venueName: '', venueAddress: '', locationsJson: '[]', maxRegisteredGuests: 1, welcomeMessage: '', storyText: '', dressCode: '', dressCodePreset: '', dressCodeImageUrl: '', showDressCodePalette: false, dressCodeColorsJson: '[]', mapUrl: '', giftRegistryUrl: '', giftOptionsJson: '[]', scheduleJson: '[]', faqJson: '[]', tablesJson: '[]', showWelcome: true, showStory: true, showSchedule: true, showDressCode: true, showLocation: true, showGiftRegistry: true, showFaq: true, showTables: true, primaryColor: '#7fb3a8', accentColor: '#b79a62', backgroundColor: '#f4f1ea', templateId: 'FLORAL_ROMANCE' }
+const emptyContent = { title: '', partnerOneName: '', partnerTwoName: '', weddingDate: '', venueName: '', venueAddress: '', locationsJson: '[]', maxRegisteredGuests: 1, welcomeMessage: '', welcomeCitation: '', brideFatherName: '', brideMotherName: '', groomFatherName: '', groomMotherName: '', godfatherName: '', godmotherName: '', customLogoUrl: '', storyText: '', dressCode: '', dressCodePreset: '', dressCodeImageUrl: '', showDressCodePalette: false, dressCodeColorsJson: '[]', mapUrl: '', giftRegistryUrl: '', giftOptionsJson: '[]', scheduleJson: '[]', faqJson: '[]', tablesJson: '[]', showWelcome: true, showStory: true, showSchedule: true, showDressCode: true, showLocation: true, showGiftRegistry: true, showFaq: true, showTables: true, primaryColor: '#7fb3a8', accentColor: '#b79a62', backgroundColor: '#f4f1ea', templateId: 'FLORAL_ROMANCE' }
 function hexToRgb(hex) {
   if (!hex) return { r: 0, g: 0, b: 0, text: '0, 0, 0' }
   let clean = String(hex).replace('#', '').trim()
@@ -177,6 +177,8 @@ function AdminPage() {
   const [audioTitle, setAudioTitle] = useState('')
   const [dressCodeImageFile, setDressCodeImageFile] = useState(null)
   const [uploadingDressCode, setUploadingDressCode] = useState(false)
+  const [customLogoFile, setCustomLogoFile] = useState(null)
+  const [uploadingLogo, setUploadingLogo] = useState(false)
   const [caption, setCaption] = useState('')
   const [section, setSection] = useState('GALLERY')
   const [photos, setPhotos] = useState([])
@@ -191,6 +193,10 @@ function AdminPage() {
   const [currentAudio, setCurrentAudio] = useState(null)
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [sessionExpired, setSessionExpired] = useState(false)
+  const [reauthPassword, setReauthPassword] = useState('')
+  const [reauthing, setReauthing] = useState(false)
+  const [savingContent, setSavingContent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('summary')
   const [newWedding, setNewWedding] = useState({ title: '', partnerOneName: '', partnerTwoName: '', weddingDate: '', venueName: '', venueAddress: '', maxRegisteredGuests: 1 })
@@ -232,6 +238,7 @@ function AdminPage() {
       sessionStorage.setItem('adminToken', response.token)
       sessionStorage.setItem('adminUserId', response.userId)
       sessionStorage.setItem('adminRole', response.role || 'COUPLE')
+      sessionStorage.setItem('adminEmail', response.email || email)
       setToken(response.token)
       setUserId(String(response.userId))
       setRole(response.role || 'COUPLE')
@@ -283,6 +290,21 @@ function AdminPage() {
     }
   }
 
+  async function handleDeleteAudio() {
+    if (!window.confirm('¿Deseas eliminar la música de fondo de tu invitación?')) return
+    try {
+      setLoading(true)
+      await deleteWeddingAudio(weddingId, token)
+      setCurrentAudio(null)
+      setMessage('Canción eliminada correctamente.')
+      setError('')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'No se pudo eliminar la canción.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   async function handleDressCodeImageUpload() {
     if (!dressCodeImageFile) {
       setError('Selecciona una imagen del código de vestimenta.')
@@ -299,6 +321,25 @@ function AdminPage() {
       setError(requestError.response?.data?.message || 'No se pudo cargar la imagen del código de vestimenta.')
     } finally {
       setUploadingDressCode(false)
+    }
+  }
+
+  async function handleCustomLogoUpload() {
+    if (!customLogoFile) {
+      setError('Selecciona una imagen para el logo personalizado.')
+      return
+    }
+    setUploadingLogo(true)
+    setError('')
+    try {
+      const savedLogo = await uploadWeddingLogo(weddingId, customLogoFile, token)
+      setContentForm((current) => ({ ...current, customLogoUrl: savedLogo.imageUrl }))
+      setCustomLogoFile(null)
+      setMessage('Logo personalizado subido correctamente. Guarda el contenido para publicarlo.')
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'No se pudo cargar el logo personalizado.')
+    } finally {
+      setUploadingLogo(false)
     }
   }
 
@@ -388,18 +429,89 @@ function AdminPage() {
   }
 
   async function handleSaveContent(event) {
-    event.preventDefault()
+    if (event) event.preventDefault()
+    if (!contentForm.title?.trim()) {
+      setError('Por favor ingresa un título para la boda.')
+      return
+    }
+    if (!contentForm.partnerOneName?.trim() || !contentForm.partnerTwoName?.trim()) {
+      setError('Por favor ingresa los nombres de ambos novios.')
+      return
+    }
+    if (!contentForm.weddingDate) {
+      setError('Por favor selecciona la fecha de la boda.')
+      return
+    }
+    setSavingContent(true)
+    setError('')
+    setMessage('')
     try {
-      const saved = await updateWeddingContent(weddingId, { ...contentForm, venueName: '', venueAddress: '', mapUrl: '', maxRegisteredGuests: Number(contentForm.maxRegisteredGuests), locationsJson: JSON.stringify(locationItems), giftOptionsJson: JSON.stringify(giftItems), scheduleJson: JSON.stringify(scheduleItems), faqJson: JSON.stringify(faqItems), tablesJson: JSON.stringify(tableItems) }, token)
+      const saved = await updateWeddingContent(weddingId, { ...contentForm, venueName: '', venueAddress: '', mapUrl: '', maxRegisteredGuests: Number(contentForm.maxRegisteredGuests || 1), locationsJson: JSON.stringify(locationItems), giftOptionsJson: JSON.stringify(giftItems), scheduleJson: JSON.stringify(scheduleItems), faqJson: JSON.stringify(faqItems), tablesJson: JSON.stringify(tableItems) }, token)
       setContentForm(saved)
       setScheduleItems(parseEditorList(saved.scheduleJson)); setFaqItems(parseEditorList(saved.faqJson)); setTableItems(parseEditorList(saved.tablesJson).map((table) => ({ ...table, guestIds: Array.isArray(table.guestIds) ? table.guestIds : [] })))
       setLocationItems(parseEditorList(saved.locationsJson)); setGiftItems(parseEditorList(saved.giftOptionsJson))
       setWeddings((current) => current.map((wedding) => String(wedding.id) === String(weddingId) ? { ...wedding, title: saved.title, partnerOneName: saved.partnerOneName, partnerTwoName: saved.partnerTwoName, weddingDate: saved.weddingDate, maxRegisteredGuests: saved.maxRegisteredGuests } : wedding))
       setMessage('Contenido y datos generales guardados correctamente.')
       setError('')
+      setSessionExpired(false)
     } catch (requestError) {
       console.error('Error al guardar contenido:', requestError)
-      setError(requestError.response?.data?.message || requestError.message || 'No se pudo guardar el contenido.')
+      if (requestError.response?.status === 401) {
+        setSessionExpired(true)
+        setError('Tu sesión ha expirado por inactividad o reinicio del servidor. Ingresa tu contraseña abajo para renovarla y guardar tus cambios.')
+      } else {
+        setError(requestError.response?.data?.message || requestError.message || 'No se pudo guardar el contenido.')
+      }
+    } finally {
+      setSavingContent(false)
+    }
+  }
+
+  async function handleReauthAndSave(e) {
+    if (e) e.preventDefault()
+    if (!reauthPassword) {
+      setError('Por favor ingresa tu contraseña.')
+      return
+    }
+    setReauthing(true)
+    setError('')
+    try {
+      const emailToUse = email || sessionStorage.getItem('adminEmail') || weddings.find((w) => String(w.id) === String(weddingId))?.ownerEmail || 'alexander@yopmail.com'
+      const response = await login({ email: emailToUse, password: reauthPassword })
+      sessionStorage.setItem('adminToken', response.token)
+      sessionStorage.setItem('adminUserId', response.userId)
+      sessionStorage.setItem('adminRole', response.role || 'COUPLE')
+      sessionStorage.setItem('adminEmail', response.email || emailToUse)
+      setToken(response.token)
+      setSessionExpired(false)
+      setReauthPassword('')
+
+      const saved = await updateWeddingContent(weddingId, {
+        ...contentForm,
+        venueName: '',
+        venueAddress: '',
+        mapUrl: '',
+        maxRegisteredGuests: Number(contentForm.maxRegisteredGuests),
+        locationsJson: JSON.stringify(locationItems),
+        giftOptionsJson: JSON.stringify(giftItems),
+        scheduleJson: JSON.stringify(scheduleItems),
+        faqJson: JSON.stringify(faqItems),
+        tablesJson: JSON.stringify(tableItems)
+      }, response.token)
+      setContentForm(saved)
+      setScheduleItems(parseEditorList(saved.scheduleJson))
+      setFaqItems(parseEditorList(saved.faqJson))
+      setTableItems(parseEditorList(saved.tablesJson).map((table) => ({ ...table, guestIds: Array.isArray(table.guestIds) ? table.guestIds : [] })))
+      setLocationItems(parseEditorList(saved.locationsJson))
+      setGiftItems(parseEditorList(saved.giftOptionsJson))
+      setWeddings((current) => current.map((wedding) => String(wedding.id) === String(weddingId) ? { ...wedding, title: saved.title, partnerOneName: saved.partnerOneName, partnerTwoName: saved.partnerTwoName, weddingDate: saved.weddingDate, maxRegisteredGuests: saved.maxRegisteredGuests } : wedding))
+      setMessage('¡Sesión renovada y contenido guardado correctamente!')
+      setError('')
+    } catch (err) {
+      console.error('Error al renovar sesión:', err)
+      setError('Contraseña incorrecta. Por favor inténtalo de nuevo o cierra sesión.')
+    } finally {
+      setReauthing(false)
     }
   }
 
@@ -717,7 +829,75 @@ function AdminPage() {
           </div>
         </section>)}</>}
 
-        {activeTab === 'music' && <section className="music-panel"><h2>Música de la invitación</h2><p>La música se activará cuando el invitado pulse el botón, porque los navegadores bloquean el audio automático.</p>{currentAudio && <div className="current-audio"><span className="music-icon">♫</span><div><strong>{currentAudio.title || 'Canción de la invitación'}</strong><small>Archivo: {currentAudio.fileName || 'Nombre no disponible'}</small><small>Hay una canción cargada. Al guardar otra, se reemplazará.</small></div></div>}<form onSubmit={handleAudioUpload}><label>Archivo de audio<input type="file" accept="audio/*" onChange={(event) => setAudioFile(event.target.files[0])} required /></label><label>Título<input value={audioTitle} onChange={(event) => setAudioTitle(event.target.value)} placeholder="Nuestra canción" /></label><button className="primary-button" type="submit">{currentAudio ? 'Reemplazar canción' : 'Guardar canción'}</button></form>{message && <p className="form-success">{message}</p>}{error && <p className="form-error">{error}</p>}</section>}
+        {activeTab === 'music' && (
+          <section className="music-panel">
+            <h2>Música de fondo de la invitación</h2>
+            <p className="editor-hint">
+              La música de fondo empezará a sonar cuando el invitado abra la carta o pulse el botón musical en pantalla.
+            </p>
+
+            {currentAudio ? (
+              <div className="current-audio-card">
+                <div className="current-audio-header">
+                  <span className="music-active-badge">♫ Canción Activa</span>
+                  <button
+                    type="button"
+                    className="delete-audio-btn"
+                    onClick={handleDeleteAudio}
+                    disabled={loading}
+                    title="Eliminar música actual"
+                  >
+                    🗑️ Eliminar música
+                  </button>
+                </div>
+                <div className="current-audio-body">
+                  <h4 className="audio-card-title">{currentAudio.title || 'Canción de la invitación'}</h4>
+                  <p className="audio-card-filename">Archivo: {currentAudio.fileName || 'audio.mp3'}</p>
+                  <audio
+                    controls
+                    src={getImageUrl(currentAudio.audioUrl)}
+                    className="admin-preview-audio-player"
+                    preload="metadata"
+                  />
+                </div>
+                <p className="audio-change-tip">
+                  Si deseas cambiar la canción, selecciona un nuevo archivo a continuación:
+                </p>
+              </div>
+            ) : (
+              <div className="no-audio-state-card">
+                <span className="no-audio-icon" aria-hidden="true">🎵</span>
+                <h4>Sin música de fondo configurada</h4>
+                <p>Sube una canción en formato .mp3, .m4a o .wav para ambientar la experiencia de tus invitados.</p>
+              </div>
+            )}
+
+            <form onSubmit={handleAudioUpload} className="admin-audio-form">
+              <label>
+                {currentAudio ? 'Seleccionar nueva canción para reemplazar (.mp3, .m4a, .wav)' : 'Archivo de audio (.mp3, .m4a, .wav)'}
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={(event) => setAudioFile(event.target.files[0])}
+                  required
+                />
+              </label>
+              <label>
+                Título de la canción
+                <input
+                  value={audioTitle}
+                  onChange={(event) => setAudioTitle(event.target.value)}
+                  placeholder="Ej: A Thousand Years - Christina Perri"
+                />
+              </label>
+              <button className="primary-button" type="submit" disabled={loading}>
+                {loading ? 'Subiendo audio...' : currentAudio ? 'Reemplazar y guardar canción' : 'Guardar y subir canción'}
+              </button>
+            </form>
+            {message && <p className="form-success">{message}</p>}
+            {error && <p className="form-error">{error}</p>}
+          </section>
+        )}
 
         {activeTab === 'groups' && <section><h2>Grupos familiares</h2>
         <form className="group-form" onSubmit={handleCreateGroup}>
@@ -734,9 +914,11 @@ function AdminPage() {
           </article>)}
         </div></section>}
 
-        {activeTab === 'content' && <form className="content-form" onSubmit={handleSaveContent}>
+        {activeTab === 'content' && <form className="content-form" onSubmit={handleSaveContent} noValidate>
           <h2>Contenido de la invitación</h2>
           <p className="summary-section">Organiza la información de tu invitación con campos simples. Puedes ocultar cualquier sección sin perder su contenido.</p>
+          {message && <p className="form-success" style={{ padding: '12px 16px', background: '#eaf5ea', color: '#1b6329', borderRadius: '8px', fontWeight: 600, margin: '10px 0' }}>{message}</p>}
+          {error && <p className="form-error" style={{ padding: '12px 16px', background: '#fdeeed', color: '#b91c1c', borderRadius: '8px', fontWeight: 600, margin: '10px 0' }}>{error}</p>}
           <div className="wedding-form">
             <label>Título<input value={contentForm.title || ''} onChange={(event) => setContentForm({ ...contentForm, title: event.target.value })} required /></label>
             <label>Nombre 1<input value={contentForm.partnerOneName || ''} onChange={(event) => setContentForm({ ...contentForm, partnerOneName: event.target.value })} required /></label>
@@ -744,7 +926,121 @@ function AdminPage() {
             <label>Fecha<input type="date" value={contentForm.weddingDate || ''} onChange={(event) => setContentForm({ ...contentForm, weddingDate: event.target.value })} required /></label>
             <label>Máximo de invitados<input type="number" min="1" value={contentForm.maxRegisteredGuests || 1} onChange={(event) => setContentForm({ ...contentForm, maxRegisteredGuests: Number(event.target.value) })} /></label>
           </div>
-          <label>Texto de bienvenida<textarea value={contentForm.welcomeMessage || ''} onChange={(event) => setContentForm({ ...contentForm, welcomeMessage: event.target.value })} rows="3" /></label>
+          <div className="content-editor-block">
+            <h3>Mensaje de Bienvenida y Cita Bíblica / Frase</h3>
+            <p className="editor-hint">Escribe una dedicatoria o pasaje bíblico para tus invitados. Si colocas la cita o libro (ej: Colosenses 3:14 o 1 Corintios 13:4-8), se resaltará automáticamente con el color de acento de tu boda.</p>
+            <label>Texto de bienvenida o pasaje bíblico
+              <textarea
+                value={contentForm.welcomeMessage || ''}
+                onChange={(event) => setContentForm({ ...contentForm, welcomeMessage: event.target.value })}
+                rows="3"
+                placeholder="Por encima de todo, vístanse de amor, que es el vínculo perfecto."
+              />
+            </label>
+            <label>Cita bíblica o referencia (opcional)
+              <input
+                value={contentForm.welcomeCitation || ''}
+                onChange={(event) => setContentForm({ ...contentForm, welcomeCitation: event.target.value })}
+                placeholder="Ejemplo: Colosenses 3:14"
+              />
+            </label>
+          </div>
+
+          <div className="content-editor-block">
+            <h3>Logo o Monograma de los Novios</h3>
+            <p className="editor-hint">Si tienen su propio logotipo, monograma o isotipo personalizado de boda, pueden subirlo aquí. Si no suben ninguna imagen, la invitación mostrará las elegantes iniciales de los novios por defecto.</p>
+            <div className="dress-code-upload">
+              <label>Subir logo propio (PNG transparente recomendado)
+                <input type="file" accept="image/*" onChange={(event) => setCustomLogoFile(event.target.files?.[0] || null)} />
+              </label>
+              <button
+                type="button"
+                className="secondary-button upload-image-button"
+                onClick={handleCustomLogoUpload}
+                disabled={uploadingLogo}
+              >
+                {uploadingLogo ? 'Cargando logo...' : 'Cargar logo'}
+              </button>
+            </div>
+            {contentForm.customLogoUrl && (
+              <div className="custom-logo-admin-preview-wrap" style={{ marginTop: '12px' }}>
+                <img
+                  className="custom-logo-admin-preview"
+                  src={getImageUrl(contentForm.customLogoUrl)}
+                  alt="Logo de los novios"
+                  style={{ maxHeight: '90px', objectFit: 'contain', background: '#faf8f5', padding: '8px', borderRadius: '8px', border: '1px solid #ddd' }}
+                />
+                <button
+                  type="button"
+                  className="remove-button"
+                  style={{ display: 'block', marginTop: '8px' }}
+                  onClick={() => setContentForm({ ...contentForm, customLogoUrl: '' })}
+                >
+                  Restablecer a iniciales por defecto
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="content-editor-block">
+            <h3>Padres y Padrinos de Boda (Opcional)</h3>
+            <p className="editor-hint">Los nombres de los padres y padrinos se mostrarán con la bendición de la familia en las plantillas. Ningún campo es obligatorio.</p>
+            <div className="wedding-form family-inputs-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))' }}>
+              <div className="family-col-block">
+                <h4 style={{ margin: '0 0 10px', fontSize: '0.95rem', color: 'var(--text-color)' }}>Novia</h4>
+                <label>Mamá de la novia
+                  <input
+                    value={contentForm.brideMotherName || ''}
+                    onChange={(e) => setContentForm({ ...contentForm, brideMotherName: e.target.value })}
+                    placeholder="Nombre de la mamá"
+                  />
+                </label>
+                <label>Papá de la novia
+                  <input
+                    value={contentForm.brideFatherName || ''}
+                    onChange={(e) => setContentForm({ ...contentForm, brideFatherName: e.target.value })}
+                    placeholder="Nombre del papá"
+                  />
+                </label>
+              </div>
+
+              <div className="family-col-block">
+                <h4 style={{ margin: '0 0 10px', fontSize: '0.95rem', color: 'var(--text-color)' }}>Novio</h4>
+                <label>Mamá del novio
+                  <input
+                    value={contentForm.groomMotherName || ''}
+                    onChange={(e) => setContentForm({ ...contentForm, groomMotherName: e.target.value })}
+                    placeholder="Nombre de la mamá"
+                  />
+                </label>
+                <label>Papá del novio
+                  <input
+                    value={contentForm.groomFatherName || ''}
+                    onChange={(e) => setContentForm({ ...contentForm, groomFatherName: e.target.value })}
+                    placeholder="Nombre del papá"
+                  />
+                </label>
+              </div>
+
+              <div className="family-col-block">
+                <h4 style={{ margin: '0 0 10px', fontSize: '0.95rem', color: 'var(--text-color)' }}>Padrinos</h4>
+                <label>Madrina de boda
+                  <input
+                    value={contentForm.godmotherName || ''}
+                    onChange={(e) => setContentForm({ ...contentForm, godmotherName: e.target.value })}
+                    placeholder="Nombre de la madrina"
+                  />
+                </label>
+                <label>Padrino de boda
+                  <input
+                    value={contentForm.godfatherName || ''}
+                    onChange={(e) => setContentForm({ ...contentForm, godfatherName: e.target.value })}
+                    placeholder="Nombre del padrino"
+                  />
+                </label>
+              </div>
+            </div>
+          </div>
           <label>Historia<textarea value={contentForm.storyText || ''} onChange={(event) => setContentForm({ ...contentForm, storyText: event.target.value })} rows="5" /></label>
           <section className="content-editor-block">
             <h3>Código de vestimenta</h3>
@@ -827,33 +1123,63 @@ function AdminPage() {
             <div className="repeat-heading">
               <div>
                 <h3>Plantilla de diseño de la invitación</h3>
-                <p className="editor-hint">Escoge el estilo visual que verán tus invitados. Ambos diseños adaptan automáticamente los colores que elijas abajo.</p>
+                <p className="editor-hint">Escoge el estilo visual que verán tus invitados. Las cuatro plantillas adaptan armónicamente los colores que elijas abajo.</p>
               </div>
             </div>
-            <div className="templates-selector-grid">
+            <div className="templates-selector-grid four-templates-grid">
+              {/* Plantilla 1: Romántica Floral */}
               <button
                 type="button"
-                className={`template-choice-card ${contentForm.templateId !== 'EDITORIAL_CARDS' ? 'is-active' : ''}`}
+                className={`template-choice-card ${contentForm.templateId === 'FLORAL_ROMANCE' ? 'is-active' : ''}`}
                 onClick={() => setContentForm({ ...contentForm, templateId: 'FLORAL_ROMANCE' })}
               >
-                <div className="template-badge-tag">Clásica</div>
+                <div className="template-badge-tag">Plantilla 1</div>
                 <h4>Romántica Floral</h4>
-                <p>Sobre interactivo con rosas botánicas, monograma con iniciales y presentación tradicional refinada.</p>
+                <p>Sobre interactivo con rosas botánicas, monograma caligráfico y presentación tradicional refinada.</p>
                 <div className="template-sample-preview floral-sample">
-                  <span>✉ Sobre Floral</span>
+                  <span>✉ Sobre Clásico</span>
                 </div>
               </button>
 
+              {/* Plantilla 2: Editorial Romance & Arcos */}
               <button
                 type="button"
                 className={`template-choice-card ${contentForm.templateId === 'EDITORIAL_CARDS' ? 'is-active' : ''}`}
                 onClick={() => setContentForm({ ...contentForm, templateId: 'EDITORIAL_CARDS' })}
               >
-                <div className="template-badge-tag highlight-badge">Moderna</div>
+                <div className="template-badge-tag highlight-badge">Plantilla 2</div>
                 <h4>Editorial Romance &amp; Arcos</h4>
-                <p>Pantalla de inicio con fondo floral en acuarela, caligrafía artística, corazones entrelazados y tarjetas con arcos elegantes.</p>
+                <p>Portada con botón minimalista, tipografía de revista, tarjetas flotantes con cortes de arco e iconografía fina.</p>
                 <div className="template-sample-preview cards-sample">
                   <span>♥ Cards &amp; Arcos</span>
+                </div>
+              </button>
+
+              {/* Plantilla 3: Romance Editorial Floral */}
+              <button
+                type="button"
+                className={`template-choice-card ${contentForm.templateId === 'EDITORIAL_FLORAL_COMBO' ? 'is-active' : ''}`}
+                onClick={() => setContentForm({ ...contentForm, templateId: 'EDITORIAL_FLORAL_COMBO' })}
+              >
+                <div className="template-badge-tag combo-badge">Plantilla 3</div>
+                <h4>Romance Editorial Floral</h4>
+                <p>Portada con sobre interactivo y esquinas florales de arcos, nombres ampliados, y tarjetas editoriales con arcos.</p>
+                <div className="template-sample-preview combo-sample">
+                  <span>✉ Sobre + Arcos</span>
+                </div>
+              </button>
+
+              {/* Plantilla 4: Boho Rústico & Terracota */}
+              <button
+                type="button"
+                className={`template-choice-card ${contentForm.templateId === 'BOHO_CHIC_MINIMAL' ? 'is-active' : ''}`}
+                onClick={() => setContentForm({ ...contentForm, templateId: 'BOHO_CHIC_MINIMAL' })}
+              >
+                <div className="template-badge-tag boho-badge">Plantilla 4</div>
+                <h4>Boho Rústico &amp; Terracota</h4>
+                <p>Estética cálida y rústica, fotos con bordes rasgados de papel, timeline de actividades, versículo bíblico y sobre floral.</p>
+                <div className="template-sample-preview boho-sample">
+                  <span>🌾 Boho &amp; Timeline</span>
                 </div>
               </button>
             </div>
@@ -888,6 +1214,13 @@ function AdminPage() {
                 >
                   <span className="dot" style={{ background: '#2C3E50' }} /> Azul Noche & Oro
                 </button>
+                <button
+                  type="button"
+                  className="quick-palette-btn"
+                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#B85D36', accentColor: '#9E7D55', backgroundColor: '#FAF6F0' })}
+                >
+                  <span className="dot" style={{ background: '#B85D36' }} /> Terracota Boho
+                </button>
               </div>
             </div>
             <div className="palette-controls-grid">
@@ -914,13 +1247,53 @@ function AdminPage() {
               />
             </div>
           </div>
-          <div className="repeat-editor"><div className="repeat-heading"><h3>Agenda del evento</h3><button type="button" className="secondary-button" onClick={() => setScheduleItems([...scheduleItems, { time: '', title: '', notes: '' }])}>+ Añadir actividad</button></div>{scheduleItems.map((item, index) => <div className="repeat-row" key={`schedule-${index}`}><input type="time" value={item.time || ''} onChange={(event) => setScheduleItems(scheduleItems.map((current, row) => row === index ? { ...current, time: event.target.value } : current))} /><input placeholder="Actividad" value={item.title || ''} onChange={(event) => setScheduleItems(scheduleItems.map((current, row) => row === index ? { ...current, title: event.target.value } : current))} /><input placeholder="Nota o responsable" value={item.notes || ''} onChange={(event) => setScheduleItems(scheduleItems.map((current, row) => row === index ? { ...current, notes: event.target.value } : current))} /><button type="button" className="remove-button" onClick={() => setScheduleItems(scheduleItems.filter((_, row) => row !== index))}>Eliminar</button></div>)}</div>
+          <div className="repeat-editor"><div className="repeat-heading"><h3>Agenda de actividades</h3><button type="button" className="secondary-button" onClick={() => setScheduleItems([...scheduleItems, { time: '', title: '', notes: '' }])}>+ Añadir actividad</button></div>{scheduleItems.map((item, index) => <div className="repeat-row" key={`schedule-${index}`}><input type="time" value={item.time || ''} onChange={(event) => setScheduleItems(scheduleItems.map((current, row) => row === index ? { ...current, time: event.target.value } : current))} /><input placeholder="Actividad" value={item.title || ''} onChange={(event) => setScheduleItems(scheduleItems.map((current, row) => row === index ? { ...current, title: event.target.value } : current))} /><input placeholder="Nota o responsable" value={item.notes || ''} onChange={(event) => setScheduleItems(scheduleItems.map((current, row) => row === index ? { ...current, notes: event.target.value } : current))} /><button type="button" className="remove-button" onClick={() => setScheduleItems(scheduleItems.filter((_, row) => row !== index))}>Eliminar</button></div>)}</div>
           <div className="repeat-editor"><div className="repeat-heading"><h3>Preguntas frecuentes</h3><button type="button" className="secondary-button" onClick={() => setFaqItems([...faqItems, { question: '', answer: '' }])}>+ Añadir pregunta</button></div>{faqItems.map((item, index) => <div className="repeat-row repeat-row-faq" key={`faq-${index}`}><input placeholder="Pregunta" value={item.question || ''} onChange={(event) => setFaqItems(faqItems.map((current, row) => row === index ? { ...current, question: event.target.value } : current))} /><input placeholder="Respuesta" value={item.answer || ''} onChange={(event) => setFaqItems(faqItems.map((current, row) => row === index ? { ...current, answer: event.target.value } : current))} /><button type="button" className="remove-button" onClick={() => setFaqItems(faqItems.filter((_, row) => row !== index))}>Eliminar</button></div>)}</div>
           <div className="repeat-editor"><div className="repeat-heading"><h3>Mesas</h3><button type="button" className="secondary-button" onClick={() => setTableItems([...tableItems, { name: '', capacity: '', guestIds: [] }])}>+ Añadir mesa</button></div>{tableItems.map((item, index) => <div className="repeat-row" key={`table-${index}`}><input placeholder="Nombre de mesa" value={item.name || ''} onChange={(event) => setTableItems(tableItems.map((current, row) => row === index ? { ...current, name: event.target.value } : current))} /><input type="number" min="1" placeholder="Capacidad" value={item.capacity || ''} onChange={(event) => setTableItems(tableItems.map((current, row) => row === index ? { ...current, capacity: event.target.value } : current))} /><button type="button" className="remove-button" onClick={() => setTableItems(tableItems.filter((_, row) => row !== index))}>Eliminar</button></div>)}</div>
           <section className="seat-planner"><div className="repeat-heading"><div><h3>Asignación de invitados</h3><p className="seat-help">Arrastra a los invitados confirmados hacia una mesa o usa el selector. La distribución se guarda junto con la boda.</p></div></div><div className="seat-layout"><div className="seat-guest-list"><h4>Sin mesa</h4>{confirmedGuests.filter((guest) => !tableItems.some((table) => (table.guestIds || []).some((id) => String(id) === String(guest.id)))).map((guest) => <article className="seat-guest" draggable key={guest.id} onDragStart={(event) => event.dataTransfer.setData('guestId', String(guest.id))}><strong>{guest.fullName}</strong><small>{guest.groupName}</small><select value="" onChange={(event) => event.target.value && assignGuestToTable(guest.id, Number(event.target.value))}><option value="">Asignar mesa...</option>{tableItems.map((table, index) => <option value={index} key={index}>{table.name || `Mesa ${index + 1}`}</option>)}</select></article>)}{confirmedGuests.filter((guest) => !tableItems.some((table) => (table.guestIds || []).some((id) => String(id) === String(guest.id)))).length === 0 && <p className="seat-empty">Todos los confirmados tienen mesa.</p>}</div><div className="seat-tables">{tableItems.map((table, index) => { const seatedGuests = confirmedGuests.filter((guest) => (table.guestIds || []).some((id) => String(id) === String(guest.id))); return <article className="seat-table" key={`seat-${index}`} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { const guestId = event.dataTransfer.getData('guestId'); if (guestId) assignGuestToTable(guestId, index) }}><div className="seat-table-heading"><strong>{table.name || `Mesa ${index + 1}`}</strong><span>{seatedGuests.length}/{table.capacity || '∞'}</span></div>{seatedGuests.map((guest) => <div className="seated-guest" key={guest.id}><span>{guest.fullName}</span><button type="button" className="remove-button" onClick={() => removeGuestFromTables(guest.id)} aria-label={`Quitar a ${guest.fullName}`}>Quitar</button></div>)}{seatedGuests.length === 0 && <p className="seat-empty">Suelta aquí un invitado</p>}</article>})}</div></div></section>
           <div className="visibility-grid"><strong>Secciones visibles</strong>{[['showWelcome', 'Bienvenida'], ['showStory', 'Historia'], ['showSchedule', 'Agenda'], ['showDressCode', 'Vestimenta'], ['showLocation', 'Ubicación'], ['showGiftRegistry', 'Regalos'], ['showFaq', 'Preguntas frecuentes'], ['showTables', 'Mesas']].map(([field, label]) => <label className="check-label" key={field}><input type="checkbox" checked={contentForm[field] !== false} onChange={(event) => setContentForm({ ...contentForm, [field]: event.target.checked })} />{label}</label>)}</div>
-          <button className="primary-button" type="submit">Guardar contenido</button>
-          {message && <p className="form-success">{message}</p>}{error && <p className="form-error">{error}</p>}
+          <button className="primary-button" id="save-content-btn" type="submit" onClick={handleSaveContent} disabled={savingContent}>
+            {savingContent ? 'Guardando contenido...' : 'Guardar contenido'}
+          </button>
+          {message && <p className="form-success">{message}</p>}
+          {error && (
+            <div className="form-error-block" style={{ marginTop: '12px' }}>
+              <p className="form-error">{error}</p>
+              {sessionExpired && (
+                <div className="reauth-modal-inline" style={{ marginTop: '12px', padding: '16px 20px', background: '#faf6f0', border: '1.5px solid var(--accent-color, #c17a56)', borderRadius: '12px', boxShadow: '0 4px 14px rgba(0,0,0,0.08)' }}>
+                  <h4 style={{ margin: '0 0 6px', color: '#2c2523', fontSize: '1rem', fontWeight: 600 }}>Renovar sesión para guardar</h4>
+                  <p style={{ margin: '0 0 12px', fontSize: '0.88rem', color: '#6d6159' }}>
+                    Tu sesión expiró. Ingresa tu contraseña para continuar sin perder ningún cambio que hayas realizado:
+                  </p>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', alignItems: 'center' }}>
+                    <input
+                      type="password"
+                      placeholder="Ingresa tu contraseña"
+                      value={reauthPassword}
+                      onChange={(e) => setReauthPassword(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleReauthAndSave(e) } }}
+                      style={{ flex: 1, minWidth: '200px', padding: '10px 14px', borderRadius: '8px', border: '1px solid #ccc' }}
+                    />
+                    <button
+                      type="button"
+                      className="primary-button"
+                      onClick={handleReauthAndSave}
+                      disabled={reauthing}
+                    >
+                      {reauthing ? 'Renovando...' : 'Renovar y Guardar'}
+                    </button>
+                    <button
+                      type="button"
+                      className="secondary-button"
+                      onClick={handleLogout}
+                    >
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </form>}
 
         {activeTab === 'summary' && <section className="summary-section"><h2>Resumen</h2><p>Gestiona el contenido de <strong>{contentForm.title || weddings.find((wedding) => String(wedding.id) === String(weddingId))?.title}</strong> desde las pestañas del panel.</p><div className="summary-metrics"><article><strong>{contentForm.maxRegisteredGuests || 0}</strong><span>Pases máximos</span></article><article><strong>{groups.reduce((total, group) => total + (group.confirmedGuests || 0), 0)}</strong><span>Personas confirmadas</span></article><article><strong>{groups.reduce((total, group) => total + (group.registeredGuests || 0), 0)}</strong><span>Personas registradas</span></article><article><strong>{groups.length}</strong><span>Grupos familiares</span></article><article><strong>{photos.length}</strong><span>Fotos publicadas</span></article><article><strong>{contentForm.maxRegisteredGuests ? Math.round((groups.reduce((total, group) => total + (group.confirmedGuests || 0), 0) / contentForm.maxRegisteredGuests) * 100) : 0}%</strong><span>Personas confirmadas del máximo</span></article></div><p className="summary-note">Fecha del evento: <strong>{contentForm.weddingDate || 'Por confirmar'}</strong></p></section>}

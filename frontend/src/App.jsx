@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import PersonalizedInvitationPage from './pages/PersonalizedInvitationPage'
+import InvitationPage from './pages/InvitationPage'
 import AdminPage from './pages/AdminPage'
 
 function NotFoundPage() {
@@ -11,6 +12,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/invitacion/:slug/rsvp/:token" element={<PersonalizedInvitationPage />} />
+        <Route path="/invitacion/:slug/:token" element={<PersonalizedInvitationPage />} />
+        <Route path="/invitacion/:slug" element={<InvitationPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

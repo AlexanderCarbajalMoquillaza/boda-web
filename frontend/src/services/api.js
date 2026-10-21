@@ -79,6 +79,16 @@ export async function uploadWeddingDressCodeImage(weddingId, file, token) {
   return response.data
 }
 
+export async function uploadWeddingLogo(weddingId, file, token) {
+  const formData = new FormData()
+  formData.append('file', file)
+  const currentToken = token || sessionStorage.getItem('adminToken')
+  const response = await api.post(`/weddings/${weddingId}/logo/upload`, formData, {
+    headers: { Authorization: `Bearer ${currentToken}`, 'Content-Type': undefined },
+  })
+  return response.data
+}
+
 export async function getMyWeddings(userId, token) {
   const response = await api.get(`/weddings/user/${userId}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -119,6 +129,14 @@ export async function uploadWeddingAudio(weddingId, file, title, token) {
     throw error
   }
   const response = await api.post(`/weddings/${weddingId}/audio/upload`, formData, { headers: { Authorization: `Bearer ${currentToken}` } })
+  return response.data
+}
+
+export async function deleteWeddingAudio(weddingId, token) {
+  const currentToken = token || sessionStorage.getItem('adminToken')
+  const response = await api.delete(`/weddings/${weddingId}/audio`, {
+    headers: { Authorization: `Bearer ${currentToken}` },
+  })
   return response.data
 }
 

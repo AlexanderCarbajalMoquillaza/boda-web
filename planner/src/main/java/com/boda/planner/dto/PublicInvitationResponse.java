@@ -37,6 +37,14 @@ public class PublicInvitationResponse {
     private String accentColor;
     private String backgroundColor;
     private String templateId;
+    private String brideFatherName;
+    private String brideMotherName;
+    private String groomFatherName;
+    private String groomMotherName;
+    private String godfatherName;
+    private String godmotherName;
+    private String welcomeCitation;
+    private String customLogoUrl;
 
     public PublicInvitationResponse(
             String title,
@@ -161,4 +169,21 @@ public class PublicInvitationResponse {
     public String getTemplateId() { return templateId; }
     public Boolean getShowDressCodePalette() { return showDressCodePalette; }
     public String getDressCodeColorsJson() { return dressCodeColorsJson; }
+
+    public String getBrideFatherName() { return brideFatherName; }
+    public void setBrideFatherName(String value) { this.brideFatherName = value; }
+    public String getBrideMotherName() { return brideMotherName; }
+    public void setBrideMotherName(String value) { this.brideMotherName = value; }
+    public String getGroomFatherName() { return groomFatherName; }
+    public void setGroomFatherName(String value) { this.groomFatherName = value; }
+    public String getGroomMotherName() { return groomMotherName; }
+    public void setGroomMotherName(String value) { this.groomMotherName = value; }
+    public String getGodfatherName() { return godfatherName; }
+    public void setGodfatherName(String value) { this.godfatherName = value; }
+    public String getGodmotherName() { return godmotherName; }
+    public void setGodmotherName(String value) { this.godmotherName = value; }
+    public String getWelcomeCitation() { return welcomeCitation; }
+    public void setWelcomeCitation(String value) { this.welcomeCitation = value; }
+    public String getCustomLogoUrl() { return customLogoUrl; }
+    public void setCustomLogoUrl(String value) { this.customLogoUrl = value; }
 }

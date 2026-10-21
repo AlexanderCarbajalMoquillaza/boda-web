@@ -38,6 +38,14 @@ public class WeddingContentRequest {
     private String accentColor = "#b79a62";
     private String backgroundColor = "#f4f1ea";
     private String templateId = "FLORAL_ROMANCE";
+    private String brideFatherName;
+    private String brideMotherName;
+    private String groomFatherName;
+    private String groomMotherName;
+    private String godfatherName;
+    private String godmotherName;
+    private String welcomeCitation;
+    private String customLogoUrl;
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -105,4 +113,21 @@ public class WeddingContentRequest {
     public void setBackgroundColor(String value) { this.backgroundColor = value; }
     public String getTemplateId() { return templateId; }
     public void setTemplateId(String value) { this.templateId = value; }
+
+    public String getBrideFatherName() { return brideFatherName; }
+    public void setBrideFatherName(String value) { this.brideFatherName = value; }
+    public String getBrideMotherName() { return brideMotherName; }
+    public void setBrideMotherName(String value) { this.brideMotherName = value; }
+    public String getGroomFatherName() { return groomFatherName; }
+    public void setGroomFatherName(String value) { this.groomFatherName = value; }
+    public String getGroomMotherName() { return groomMotherName; }
+    public void setGroomMotherName(String value) { this.groomMotherName = value; }
+    public String getGodfatherName() { return godfatherName; }
+    public void setGodfatherName(String value) { this.godfatherName = value; }
+    public String getGodmotherName() { return godmotherName; }
+    public void setGodmotherName(String value) { this.godmotherName = value; }
+    public String getWelcomeCitation() { return welcomeCitation; }
+    public void setWelcomeCitation(String value) { this.welcomeCitation = value; }
+    public String getCustomLogoUrl() { return customLogoUrl; }
+    public void setCustomLogoUrl(String value) { this.customLogoUrl = value; }
 }

@@ -45,4 +45,25 @@ public class GlobalExceptionHandler {
         );
         return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE).body(apiError);
     }
+
+    @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
+    public ResponseEntity<ApiError> handleAccessDenied(org.springframework.security.access.AccessDeniedException exception, HttpServletRequest request) {
+        ApiError apiError = new ApiError(
+                HttpStatus.FORBIDDEN.value(),
+                exception.getMessage() != null ? exception.getMessage() : "No tienes permiso para gestionar esta boda",
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiError);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleGenericException(Exception exception, HttpServletRequest request) {
+        exception.printStackTrace();
+        ApiError apiError = new ApiError(
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                exception.getMessage() != null ? exception.getMessage() : "Error interno del servidor: " + exception.getClass().getSimpleName(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(apiError);
+    }
 }

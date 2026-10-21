@@ -13,4 +13,10 @@ public class WeddingAudioController {
     public WeddingAudioController(WeddingAudioService service) { this.service = service; }
     @PostMapping(value = "/upload", consumes = "multipart/form-data")
     public WeddingAudioResponse upload(@PathVariable Long weddingId, @RequestPart("file") MultipartFile file, @RequestPart(value = "title", required = false) String title, Authentication authentication) { return service.upload(weddingId, file, title, authentication.getName()); }
+
+    @DeleteMapping
+    public org.springframework.http.ResponseEntity<Void> delete(@PathVariable Long weddingId, Authentication authentication) {
+        service.delete(weddingId, authentication.getName());
+        return org.springframework.http.ResponseEntity.noContent().build();
+    }
 }

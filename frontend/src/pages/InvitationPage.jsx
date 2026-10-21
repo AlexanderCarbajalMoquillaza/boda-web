@@ -51,7 +51,7 @@ function InvitationPage() {
     return <main className="status-screen error-screen">{error}</main>
   }
 
-  const isEditorial = invitation.templateId === 'EDITORIAL_CARDS'
+  const isEditorial = invitation.templateId === 'EDITORIAL_CARDS' || invitation.templateId === 'EDITORIAL_FLORAL_COMBO' || invitation.templateId === 'BOHO_CHIC_MINIMAL'
 
   return (
     <main

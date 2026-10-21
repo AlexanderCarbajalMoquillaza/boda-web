@@ -18,7 +18,7 @@ public class PublicInvitationService {
     public PublicInvitationResponse findBySlug(String slug) {
         Wedding wedding = findPublicWeddingBySlug(slug);
 
-        return new PublicInvitationResponse(
+        PublicInvitationResponse resp = new PublicInvitationResponse(
                 wedding.getTitle(),
                 wedding.getPartnerOneName(),
                 wedding.getPartnerTwoName(),
@@ -38,6 +38,15 @@ public class PublicInvitationService {
                 wedding.getShowTables(), wedding.getPrimaryColor(), wedding.getAccentColor(), wedding.getBackgroundColor(),
                 wedding.getTemplateId() != null ? wedding.getTemplateId() : "FLORAL_ROMANCE"
         );
+        resp.setBrideFatherName(wedding.getBrideFatherName());
+        resp.setBrideMotherName(wedding.getBrideMotherName());
+        resp.setGroomFatherName(wedding.getGroomFatherName());
+        resp.setGroomMotherName(wedding.getGroomMotherName());
+        resp.setGodfatherName(wedding.getGodfatherName());
+        resp.setGodmotherName(wedding.getGodmotherName());
+        resp.setWelcomeCitation(wedding.getWelcomeCitation());
+        resp.setCustomLogoUrl(wedding.getCustomLogoUrl());
+        return resp;
     }
 
     private Wedding findPublicWeddingBySlug(String slug) {
