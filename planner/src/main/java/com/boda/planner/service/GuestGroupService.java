@@ -4,6 +4,7 @@ import com.boda.planner.dto.GuestGroupRequest;
 import com.boda.planner.dto.GuestGroupResponse;
 import com.boda.planner.dto.GuestResponse;
 import com.boda.planner.exception.ResourceNotFoundException;
+import com.boda.planner.model.Guest;
 import com.boda.planner.model.GuestGroup;
 import com.boda.planner.model.Wedding;
 import com.boda.planner.repository.GuestGroupRepository;
