@@ -43,6 +43,9 @@ public class Wedding {
     @Column(name = "door_access_key", length = 64)
     private String doorAccessKey;
 
+    @Column(name = "notification_email", length = 255)
+    private String notificationEmail;
+
     @Column(name = "max_registered_guests", nullable = false)
     private Integer maxRegisteredGuests = 0;
 
@@ -368,6 +371,9 @@ public class Wedding {
         return this.doorAccessKey;
     }
     public void setDoorAccessKey(String doorAccessKey) { this.doorAccessKey = doorAccessKey; }
+
+    public String getNotificationEmail() { return notificationEmail; }
+    public void setNotificationEmail(String notificationEmail) { this.notificationEmail = notificationEmail; }
 
     @PrePersist
     public void prePersist() {

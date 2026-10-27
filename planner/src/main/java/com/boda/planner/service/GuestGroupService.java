@@ -95,6 +95,7 @@ public class GuestGroupService {
                 guests
         );
         response.setCheckedIn(guestGroup.getCheckedIn());
+        response.setMessage(guestGroup.getMessage());
         return response;
     }
 

@@ -417,7 +417,7 @@ export function EditorialFloralComboTemplate({
         </div>
 
         {/* CARD 5: SUGERENCIA DE REGALOS */}
-        {invitation.showGiftRegistry !== false && (
+        {invitation.showGiftRegistry !== false && (giftOptions.length > 0 || invitation.giftRegistryUrl) && (
           <section className="editorial-card gift-luxury-card">
             <div className="gift-card-icon" aria-hidden="true">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -433,15 +433,6 @@ export function EditorialFloralComboTemplate({
             </p>
 
             <div className="gift-options-layout">
-              <div className="gift-box-item">
-                <div className="gift-box-header">
-                  <span className="gift-pill-tag">LLUVIA DE SOBRES</span>
-                </div>
-                <p className="gift-box-text">
-                  Si deseas compartirnos un presente en efectivo, dispondremos de un sobre y buzón especial en la recepción.
-                </p>
-              </div>
-
               {giftOptions.length > 0 && (
                 <div className="gift-box-item">
                   <div className="gift-box-header">

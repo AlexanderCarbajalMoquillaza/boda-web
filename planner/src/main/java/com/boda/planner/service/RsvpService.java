@@ -21,10 +21,12 @@ public class RsvpService {
 
     private final GuestGroupRepository guestGroupRepository;
     private final GuestRepository guestRepository;
+    private final EmailService emailService;
 
-    public RsvpService(GuestGroupRepository guestGroupRepository, GuestRepository guestRepository) {
+    public RsvpService(GuestGroupRepository guestGroupRepository, GuestRepository guestRepository, EmailService emailService) {
         this.guestGroupRepository = guestGroupRepository;
         this.guestRepository = guestRepository;
+        this.emailService = emailService;
     }
 
     public RsvpResponse findByToken(UUID token) {
@@ -78,6 +80,8 @@ public class RsvpService {
         guestGroup.setMessage(request.getMessage());
         guestGroup.setStatus(calculateGroupStatus(savedGuests));
         guestGroupRepository.save(guestGroup);
+
+        emailService.sendRsvpNotificationAsync(guestGroup.getWedding(), guestGroup, savedGuests);
 
         List<GuestResponse> guestResponses = savedGuests.stream()
                 .map(this::toGuestResponse)

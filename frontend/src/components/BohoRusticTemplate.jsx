@@ -429,7 +429,7 @@ export function BohoRusticTemplate({
           )}
 
           {/* Sugerencia de Regalos */}
-          {invitation.showGiftRegistry !== false && (
+          {invitation.showGiftRegistry !== false && (giftOptions.length > 0 || invitation.giftRegistryUrl) && (
             <section className="boho-gifts-section">
               <div className="boho-gift-icon" aria-hidden="true">
                 <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
@@ -444,12 +444,6 @@ export function BohoRusticTemplate({
               </p>
 
               <div className="boho-gift-cards-stack">
-                <div className="boho-gift-card">
-                  <p className="boho-gift-tag">LLUVIA DE SOBRES</p>
-                  <p className="boho-gift-info">
-                    Dispondremos de un buzón en la recepción para compartirnos tu detalle en sobre.
-                  </p>
-                </div>
 
                 {giftOptions.length > 0 && (
                   <div className="boho-gift-card">

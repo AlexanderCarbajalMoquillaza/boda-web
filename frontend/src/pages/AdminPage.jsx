@@ -54,7 +54,7 @@ function parseDressCodeColors(json) {
   return defaultDressCodeColors
 }
 
-const emptyContent = { title: '', partnerOneName: '', partnerTwoName: '', weddingDate: '', venueName: '', venueAddress: '', locationsJson: '[]', maxRegisteredGuests: 1, welcomeMessage: '', welcomeCitation: '', brideFatherName: '', brideMotherName: '', groomFatherName: '', groomMotherName: '', godfatherName: '', godmotherName: '', customLogoUrl: '', storyText: '', dressCode: '', dressCodePreset: '', dressCodeImageUrl: '', showDressCodePalette: false, dressCodeColorsJson: '[]', mapUrl: '', giftRegistryUrl: '', giftOptionsJson: '[]', scheduleJson: '[]', faqJson: '[]', tablesJson: '[]', showWelcome: true, showStory: true, showSchedule: true, showDressCode: true, showLocation: true, showGiftRegistry: true, showFaq: true, showTables: true, primaryColor: '#7fb3a8', accentColor: '#b79a62', backgroundColor: '#f4f1ea', lateralColor: '#e8efe9', templateId: 'FLORAL_ROMANCE' }
+const emptyContent = { title: '', partnerOneName: '', partnerTwoName: '', weddingDate: '', venueName: '', venueAddress: '', locationsJson: '[]', maxRegisteredGuests: 1, welcomeMessage: '', welcomeCitation: '', notificationEmail: '', brideFatherName: '', brideMotherName: '', groomFatherName: '', groomMotherName: '', godfatherName: '', godmotherName: '', customLogoUrl: '', storyText: '', dressCode: '', dressCodePreset: '', dressCodeImageUrl: '', showDressCodePalette: false, dressCodeColorsJson: '[]', mapUrl: '', giftRegistryUrl: '', giftOptionsJson: '[]', scheduleJson: '[]', faqJson: '[]', tablesJson: '[]', showWelcome: true, showStory: true, showSchedule: true, showDressCode: true, showLocation: true, showGiftRegistry: true, showFaq: true, showTables: true, primaryColor: '#7fb3a8', accentColor: '#b79a62', backgroundColor: '#f4f1ea', lateralColor: '#e8efe9', templateId: 'FLORAL_ROMANCE' }
 function hexToRgb(hex) {
   if (!hex) return { r: 0, g: 0, b: 0, text: '0, 0, 0' }
   let clean = String(hex).replace('#', '').trim()
@@ -1365,6 +1365,12 @@ function AdminPage() {
             <strong>{group.contactName}</strong>
             <span>{group.confirmedGuests} confirmados de {group.maxGuestsAllowed} pases · {group.registeredGuests} registrados · {group.status}</span>
             <small>Enlace personalizado: /invitacion/{weddings.find((wedding) => String(wedding.id) === String(weddingId))?.invitationSlug}/rsvp/{group.accessToken}</small>
+            {group.message && (
+              <div style={{ marginTop: '8px', padding: '10px 12px', background: '#faf6f0', borderLeft: '3px solid #b79a62', borderRadius: '6px', fontSize: '0.88rem', color: '#444' }}>
+                <span style={{ fontWeight: 600, color: '#b79a62', display: 'block', marginBottom: '2px', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💌 Mensaje para los novios:</span>
+                <span style={{ fontStyle: 'italic' }}>&ldquo;{group.message}&rdquo;</span>
+              </div>
+            )}
             {group.guests?.length > 0 && <details><summary>Ver invitados</summary>{group.guests.map((guest) => <div className="guest-row" key={guest.id}><span>{guest.fullName}</span><small>{guest.attendanceStatus === 'CONFIRMED' ? 'Asiste' : 'No asiste'}</small></div>)}</details>}
           </article>)}
         </div></section>}
@@ -1380,6 +1386,19 @@ function AdminPage() {
             <label>Nombre 2<input value={contentForm.partnerTwoName || ''} onChange={(event) => setContentForm({ ...contentForm, partnerTwoName: event.target.value })} required /></label>
             <label>Fecha<input type="date" value={contentForm.weddingDate || ''} onChange={(event) => setContentForm({ ...contentForm, weddingDate: event.target.value })} required /></label>
             <label>Máximo de invitados<input type="number" min="1" value={contentForm.maxRegisteredGuests || 1} onChange={(event) => setContentForm({ ...contentForm, maxRegisteredGuests: Number(event.target.value) })} /></label>
+          </div>
+
+          <div className="content-editor-block">
+            <h3>📧 Correo para Alertas de Confirmación</h3>
+            <p className="editor-hint">Recibirás un correo instantáneo cada vez que un invitado confirme su asistencia o te dedique un mensaje. Puedes colocar un correo o varios separados por coma (ej: <code>novia@gmail.com, novio@gmail.com</code>). Si lo dejas vacío, se usará tu correo de usuario.</p>
+            <label>Correo(s) de notificación
+              <input
+                type="text"
+                value={contentForm.notificationEmail || ''}
+                onChange={(event) => setContentForm({ ...contentForm, notificationEmail: event.target.value })}
+                placeholder="ejemplo@correo.com, novio@correo.com"
+              />
+            </label>
           </div>
           <div className="content-editor-block">
             <h3>Mensaje de Bienvenida y Cita Bíblica / Frase</h3>
@@ -2479,6 +2498,12 @@ function AdminPage() {
                           <td style={{ color: '#888', fontSize: '0.82rem', textAlign: 'center' }}>{idx + 1}</td>
                           <td>
                             <strong>{group.contactName}</strong>
+                            {group.message && (
+                              <div style={{ marginTop: '6px', fontSize: '0.8rem', color: '#5a4a2b', background: '#faf6f0', padding: '5px 8px', borderRadius: '4px', borderLeft: '3px solid #b79a62', fontStyle: 'italic', maxWidth: '300px' }}>
+                                <span style={{ fontWeight: 600, color: '#b79a62', fontStyle: 'normal', display: 'block', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>💌 Mensaje para los novios:</span>
+                                &ldquo;{group.message}&rdquo;
+                              </div>
+                            )}
                           </td>
                           <td style={{ textAlign: 'center' }}>
                             <span className="badge-pass-count">{group.maxGuestsAllowed}</span>

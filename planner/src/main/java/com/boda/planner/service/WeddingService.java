@@ -114,6 +114,7 @@ public class WeddingService {
         wedding.setGodmotherName(request.getGodmotherName());
         wedding.setWelcomeCitation(request.getWelcomeCitation());
         wedding.setCustomLogoUrl(request.getCustomLogoUrl());
+        wedding.setNotificationEmail(request.getNotificationEmail());
         return toContentResponse(weddingRepository.save(wedding));
     }
 
@@ -235,6 +236,9 @@ public class WeddingService {
         response.setWelcomeCitation(wedding.getWelcomeCitation());
         response.setCustomLogoUrl(wedding.getCustomLogoUrl());
         response.setDoorAccessKey(wedding.getDoorAccessKey());
+        response.setNotificationEmail(wedding.getNotificationEmail() != null && !wedding.getNotificationEmail().isBlank()
+                ? wedding.getNotificationEmail()
+                : wedding.getOwnerUser().getEmail());
         return response;
     }
 

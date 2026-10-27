@@ -47,6 +47,10 @@ public class WeddingContentRequest {
     private String godmotherName;
     private String welcomeCitation;
     private String customLogoUrl;
+    private String notificationEmail;
+
+    public String getNotificationEmail() { return notificationEmail; }
+    public void setNotificationEmail(String notificationEmail) { this.notificationEmail = notificationEmail; }
 
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
