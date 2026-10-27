@@ -16,12 +16,28 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 @Service
 public class EmailService {
 
     private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
     private final ObjectProvider<JavaMailSender> mailSenderProvider;
+    private final ObjectMapper objectMapper;
+
+    @Value("${app.mail.resend-api-key:}")
+    private String resendApiKey;
+
+    @Value("${app.mail.from:Boda <onboarding@resend.dev>}")
+    private String resendFrom;
 
     @Value("${spring.mail.host:}")
     private String mailHost;
@@ -32,8 +48,9 @@ public class EmailService {
     @Value("${spring.mail.password:}")
     private String mailPassword;
 
-    public EmailService(ObjectProvider<JavaMailSender> mailSenderProvider) {
+    public EmailService(ObjectProvider<JavaMailSender> mailSenderProvider, ObjectMapper objectMapper) {
         this.mailSenderProvider = mailSenderProvider;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -51,12 +68,6 @@ public class EmailService {
     }
 
     private void sendRsvpNotification(Wedding wedding, GuestGroup group, List<Guest> guests) {
-        JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
-        if (mailSender == null || mailHost == null || mailHost.isBlank() || mailUsername == null || mailUsername.isBlank() || mailPassword == null || mailPassword.isBlank()) {
-            log.info("Envío de correos omitido: faltan configurar variables SMTP (SPRING_MAIL_HOST, SPRING_MAIL_USERNAME o SPRING_MAIL_PASSWORD).");
-            return;
-        }
-
         // Determinar correo(s) de destino: el registrado en la boda o el correo de la cuenta de novios
         String targetEmails = wedding.getNotificationEmail();
         if (targetEmails == null || targetEmails.isBlank()) {
@@ -86,9 +97,60 @@ public class EmailService {
 
         String coupleNames = wedding.getPartnerOneName() + " & " + wedding.getPartnerTwoName();
         String subject = "💌 ¡Nueva confirmación para tu boda! · " + group.getContactName();
-
         String htmlBody = buildHtmlAlert(wedding, coupleNames, group, guests, confirmedCount);
 
+        // 1. Intentar envío prioritario mediante Resend API (HTTP REST, sin necesidad de SMTP)
+        if (resendApiKey != null && !resendApiKey.isBlank()) {
+            boolean success = sendViaResend(coupleNames, recipients, subject, htmlBody);
+            if (success) {
+                return;
+            }
+        }
+
+        // 2. Fallback a SMTP (JavaMailSender) si está configurado
+        JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
+        if (mailSender != null && mailHost != null && !mailHost.isBlank() && mailUsername != null && !mailUsername.isBlank() && mailPassword != null && !mailPassword.isBlank()) {
+            sendViaSmtp(mailSender, coupleNames, recipients, subject, htmlBody);
+            return;
+        }
+
+        log.info("Alerta de correo no enviada: Ni RESEND_API_KEY ni las variables SMTP están configuradas en el servidor.");
+    }
+
+    private boolean sendViaResend(String coupleNames, String[] recipients, String subject, String htmlBody) {
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+            Map<String, Object> payload = new LinkedHashMap<>();
+            String from = (resendFrom != null && !resendFrom.isBlank()) ? resendFrom : "Boda <onboarding@resend.dev>";
+            payload.put("from", from);
+            payload.put("to", recipients);
+            payload.put("subject", subject);
+            payload.put("html", htmlBody);
+
+            String jsonPayload = objectMapper.writeValueAsString(payload);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create("https://api.resend.com/emails"))
+                    .header("Authorization", "Bearer " + resendApiKey.trim())
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(jsonPayload, StandardCharsets.UTF_8))
+                    .build();
+
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() >= 200 && response.statusCode() < 300) {
+                log.info("Alerta de confirmación enviada con éxito vía Resend a: {}", Arrays.toString(recipients));
+                return true;
+            } else {
+                log.error("Error al enviar correo vía Resend API (HTTP {}): {}", response.statusCode(), response.body());
+                return false;
+            }
+        } catch (Exception e) {
+            log.error("Fallo al enviar correo vía Resend: {}", e.getMessage(), e);
+            return false;
+        }
+    }
+
+    private void sendViaSmtp(JavaMailSender mailSender, String coupleNames, String[] recipients, String subject, String htmlBody) {
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
