@@ -104,6 +104,7 @@ public class WeddingService {
         if (request.getPrimaryColor() != null && !request.getPrimaryColor().isBlank()) wedding.setPrimaryColor(request.getPrimaryColor());
         if (request.getAccentColor() != null && !request.getAccentColor().isBlank()) wedding.setAccentColor(request.getAccentColor());
         if (request.getBackgroundColor() != null && !request.getBackgroundColor().isBlank()) wedding.setBackgroundColor(request.getBackgroundColor());
+        if (request.getLateralColor() != null && !request.getLateralColor().isBlank()) wedding.setLateralColor(request.getLateralColor());
         if (request.getTemplateId() != null && !request.getTemplateId().isBlank()) wedding.setTemplateId(request.getTemplateId());
         wedding.setBrideFatherName(request.getBrideFatherName());
         wedding.setBrideMotherName(request.getBrideMotherName());
@@ -223,6 +224,7 @@ public class WeddingService {
         response.setPrimaryColor(wedding.getPrimaryColor());
         response.setAccentColor(wedding.getAccentColor());
         response.setBackgroundColor(wedding.getBackgroundColor());
+        response.setLateralColor(wedding.getLateralColor() != null ? wedding.getLateralColor() : "#e8efe9");
         response.setTemplateId(wedding.getTemplateId() != null ? wedding.getTemplateId() : "FLORAL_ROMANCE");
         response.setBrideFatherName(wedding.getBrideFatherName());
         response.setBrideMotherName(wedding.getBrideMotherName());
@@ -232,6 +234,7 @@ public class WeddingService {
         response.setGodmotherName(wedding.getGodmotherName());
         response.setWelcomeCitation(wedding.getWelcomeCitation());
         response.setCustomLogoUrl(wedding.getCustomLogoUrl());
+        response.setDoorAccessKey(wedding.getDoorAccessKey());
         return response;
     }
 

@@ -186,4 +186,21 @@ export async function deleteAdminUser(userId, token) {
   return response.data
 }
 
+export async function toggleCheckInAdmin(weddingId, payload, token) {
+  const response = await api.post(`/weddings/${weddingId}/guest-groups/checkin/toggle`, payload, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return response.data
+}
+
+export async function getDoorAccessData(slug, doorKey) {
+  const response = await api.get(`/public/door-access/${slug}/${doorKey}`)
+  return response.data
+}
+
+export async function toggleDoorCheckInPublic(slug, doorKey, payload) {
+  const response = await api.post(`/public/door-access/${slug}/${doorKey}/toggle`, payload)
+  return response.data
+}
+
 export default api

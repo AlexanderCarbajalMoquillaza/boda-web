@@ -35,6 +35,12 @@ public class GuestGroup {
     @Column(nullable = false, length = 30)
     private String status = "PENDING";
 
+    @Column(name = "checked_in", nullable = false)
+    private Boolean checkedIn = false;
+
+    @Column(name = "checked_in_at")
+    private LocalDateTime checkedInAt;
+
     @Column(columnDefinition = "TEXT")
     private String message;
 
@@ -120,5 +126,21 @@ public class GuestGroup {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public Boolean getCheckedIn() {
+        return checkedIn != null ? checkedIn : false;
+    }
+
+    public void setCheckedIn(Boolean checkedIn) {
+        this.checkedIn = checkedIn;
+    }
+
+    public LocalDateTime getCheckedInAt() {
+        return checkedInAt;
+    }
+
+    public void setCheckedInAt(LocalDateTime checkedInAt) {
+        this.checkedInAt = checkedInAt;
     }
 }

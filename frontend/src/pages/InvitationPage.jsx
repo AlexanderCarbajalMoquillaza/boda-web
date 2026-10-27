@@ -60,6 +60,7 @@ function InvitationPage() {
         '--primary-color': invitation.primaryColor || '#7fb3a8',
         '--accent-color': invitation.accentColor || '#b79a62',
         '--invitation-background': invitation.backgroundColor || '#f4f1ea',
+        '--invitation-lateral': invitation.lateralColor || invitation.backgroundColor || '#e8efe9',
       }}
     >
       {audio && (

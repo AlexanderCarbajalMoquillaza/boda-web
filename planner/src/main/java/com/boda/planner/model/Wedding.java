@@ -40,6 +40,9 @@ public class Wedding {
     @Column(name = "invitation_slug", nullable = false, unique = true, length = 120)
     private String invitationSlug;
 
+    @Column(name = "door_access_key", length = 64)
+    private String doorAccessKey;
+
     @Column(name = "max_registered_guests", nullable = false)
     private Integer maxRegisteredGuests = 0;
 
@@ -122,6 +125,8 @@ public class Wedding {
     private String accentColor = "#b79a62";
     @Column(name = "background_color", length = 20)
     private String backgroundColor = "#f4f1ea";
+    @Column(name = "lateral_color", length = 20)
+    private String lateralColor = "#e8efe9";
 
     @Column(name = "template_id", length = 50)
     private String templateId = "FLORAL_ROMANCE";
@@ -305,6 +310,8 @@ public class Wedding {
     public void setAccentColor(String accentColor) { this.accentColor = accentColor; }
     public String getBackgroundColor() { return backgroundColor; }
     public void setBackgroundColor(String backgroundColor) { this.backgroundColor = backgroundColor; }
+    public String getLateralColor() { return lateralColor; }
+    public void setLateralColor(String lateralColor) { this.lateralColor = lateralColor; }
     public String getTemplateId() { return templateId; }
     public void setTemplateId(String templateId) { this.templateId = templateId; }
 
@@ -354,10 +361,21 @@ public class Wedding {
     public byte[] getCustomLogoBytes() { return customLogoBytes; }
     public void setCustomLogoBytes(byte[] customLogoBytes) { this.customLogoBytes = customLogoBytes; }
 
+    public String getDoorAccessKey() {
+        if (this.doorAccessKey == null || this.doorAccessKey.isBlank()) {
+            this.doorAccessKey = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        }
+        return this.doorAccessKey;
+    }
+    public void setDoorAccessKey(String doorAccessKey) { this.doorAccessKey = doorAccessKey; }
+
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
         this.updatedAt = LocalDateTime.now();
+        if (this.doorAccessKey == null || this.doorAccessKey.isBlank()) {
+            this.doorAccessKey = java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        }
     }
 
     @PreUpdate

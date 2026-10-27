@@ -1,5 +1,26 @@
 import { useEffect, useState } from 'react'
-import { createAdminUser, createGuestGroup, createWedding, deleteAdminUser, deleteWeddingAudio, deleteWeddingPhoto, getAdminOverview, getGuestGroups, getImageUrl, getManagedPhotos, getMyWeddings, getPublicAudio, getWeddingContent, login, updateWeddingContent, uploadWeddingAudio, uploadWeddingDressCodeImage, uploadWeddingPhoto, uploadWeddingLogo } from '../services/api'
+import { createAdminUser, createGuestGroup, createWedding, deleteAdminUser, deleteWeddingAudio, deleteWeddingPhoto, getAdminOverview, getGuestGroups, getImageUrl, getManagedPhotos, getMyWeddings, getPublicAudio, getWeddingContent, login, updateWeddingContent, uploadWeddingAudio, uploadWeddingDressCodeImage, uploadWeddingPhoto, uploadWeddingLogo, toggleCheckInAdmin } from '../services/api'
+import {
+  IconCheckCircle,
+  IconClock,
+  IconXCircle,
+  IconTable,
+  IconUtensils,
+  IconTicket,
+  IconDoorCheck,
+  IconUsers,
+  IconSearch,
+  IconDownload,
+  IconPrinter,
+  IconShieldCheck,
+  IconCopy,
+  IconExternalLink,
+  IconSortAsc,
+  IconSortDesc,
+  IconSortDefault,
+  IconAlertTriangle,
+  IconCheck,
+} from '../components/ReportIcons'
 
 const photoSections = [
   ['HERO', 'Portada'],
@@ -33,7 +54,7 @@ function parseDressCodeColors(json) {
   return defaultDressCodeColors
 }
 
-const emptyContent = { title: '', partnerOneName: '', partnerTwoName: '', weddingDate: '', venueName: '', venueAddress: '', locationsJson: '[]', maxRegisteredGuests: 1, welcomeMessage: '', welcomeCitation: '', brideFatherName: '', brideMotherName: '', groomFatherName: '', groomMotherName: '', godfatherName: '', godmotherName: '', customLogoUrl: '', storyText: '', dressCode: '', dressCodePreset: '', dressCodeImageUrl: '', showDressCodePalette: false, dressCodeColorsJson: '[]', mapUrl: '', giftRegistryUrl: '', giftOptionsJson: '[]', scheduleJson: '[]', faqJson: '[]', tablesJson: '[]', showWelcome: true, showStory: true, showSchedule: true, showDressCode: true, showLocation: true, showGiftRegistry: true, showFaq: true, showTables: true, primaryColor: '#7fb3a8', accentColor: '#b79a62', backgroundColor: '#f4f1ea', templateId: 'FLORAL_ROMANCE' }
+const emptyContent = { title: '', partnerOneName: '', partnerTwoName: '', weddingDate: '', venueName: '', venueAddress: '', locationsJson: '[]', maxRegisteredGuests: 1, welcomeMessage: '', welcomeCitation: '', brideFatherName: '', brideMotherName: '', groomFatherName: '', groomMotherName: '', godfatherName: '', godmotherName: '', customLogoUrl: '', storyText: '', dressCode: '', dressCodePreset: '', dressCodeImageUrl: '', showDressCodePalette: false, dressCodeColorsJson: '[]', mapUrl: '', giftRegistryUrl: '', giftOptionsJson: '[]', scheduleJson: '[]', faqJson: '[]', tablesJson: '[]', showWelcome: true, showStory: true, showSchedule: true, showDressCode: true, showLocation: true, showGiftRegistry: true, showFaq: true, showTables: true, primaryColor: '#7fb3a8', accentColor: '#b79a62', backgroundColor: '#f4f1ea', lateralColor: '#e8efe9', templateId: 'FLORAL_ROMANCE' }
 function hexToRgb(hex) {
   if (!hex) return { r: 0, g: 0, b: 0, text: '0, 0, 0' }
   let clean = String(hex).replace('#', '').trim()
@@ -199,6 +220,23 @@ function AdminPage() {
   const [savingContent, setSavingContent] = useState(false)
   const [loading, setLoading] = useState(false)
   const [activeTab, setActiveTab] = useState('summary')
+  const [reportSubTab, setReportSubTab] = useState('doorlist')
+  const [reportSearch, setReportSearch] = useState('')
+  const [reportFilter, setReportFilter] = useState('ALL')
+  const [copiedLinkToken, setCopiedLinkToken] = useState('')
+  const [copiedDoorLink, setCopiedDoorLink] = useState(false)
+  const [sortColumn, setSortColumn] = useState('guestName')
+  const [sortDirection, setSortDirection] = useState('asc')
+  const [columnFilters, setColumnFilters] = useState({
+    checkin: 'ALL',
+    guestName: '',
+    groupName: '',
+    status: 'ALL',
+    tableName: 'ALL',
+  })
+  const [groupSortColumn, setGroupSortColumn] = useState('contactName')
+  const [groupSortDirection, setGroupSortDirection] = useState('asc')
+  const [groupSearch, setGroupSearch] = useState('')
   const [newWedding, setNewWedding] = useState({ title: '', partnerOneName: '', partnerTwoName: '', weddingDate: '', venueName: '', venueAddress: '', maxRegisteredGuests: 1 })
   const [adminOverview, setAdminOverview] = useState(null)
   const [viewMode, setViewMode] = useState('admin')
@@ -588,6 +626,422 @@ function AdminPage() {
     })
   }
 
+  async function toggleDoorCheckIn(item) {
+    const currentChecked = Boolean(item.checkedIn)
+    const target = !currentChecked
+    const now = target ? new Date().toISOString() : null
+
+    // Optimistically update groups in state
+    setGroups((prevGroups) =>
+      prevGroups.map((grp) => {
+        if (item.guestId) {
+          if (!grp.guests) return grp
+          return {
+            ...grp,
+            guests: grp.guests.map((g) => {
+              if (String(g.id) === String(item.guestId)) {
+                return { ...g, checkedIn: target, checkedInAt: now }
+              }
+              return g
+            }),
+          }
+        } else if (String(grp.id) === String(item.groupId)) {
+          return { ...grp, checkedIn: target, checkedInAt: now }
+        }
+        return grp
+      })
+    )
+
+    try {
+      await toggleCheckInAdmin(
+        weddingId,
+        {
+          guestId: item.guestId || null,
+          groupId: item.groupId,
+          checkedIn: target,
+        },
+        token
+      )
+    } catch {
+      // Revert if error
+      setGroups((prevGroups) =>
+        prevGroups.map((grp) => {
+          if (item.guestId) {
+            if (!grp.guests) return grp
+            return {
+              ...grp,
+              guests: grp.guests.map((g) => {
+                if (String(g.id) === String(item.guestId)) {
+                  return { ...g, checkedIn: currentChecked, checkedInAt: item.checkedInAt }
+                }
+                return g
+              }),
+            }
+          } else if (String(grp.id) === String(item.groupId)) {
+            return { ...grp, checkedIn: currentChecked, checkedInAt: item.checkedInAt }
+          }
+          return grp
+        })
+      )
+      alert('No se pudo actualizar el estado de ingreso. Revisa tu conexión.')
+    }
+  }
+
+  function copyRsvpLink(tokenToCopy) {
+    const currentWedding = weddings.find((w) => String(w.id) === String(weddingId))
+    const slug = currentWedding?.invitationSlug || contentForm.invitationSlug || 'boda'
+    const link = `${window.location.origin}/invitacion/${slug}/rsvp/${tokenToCopy}`
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedLinkToken(tokenToCopy)
+      setTimeout(() => setCopiedLinkToken(''), 2500)
+    }).catch(() => {})
+  }
+
+  function copyDoorAccessLink() {
+    const currentWedding = weddings.find((w) => String(w.id) === String(weddingId))
+    const slug = currentWedding?.invitationSlug || contentForm.invitationSlug || 'boda'
+    const key = contentForm.doorAccessKey || ''
+    const link = `${window.location.origin}/control-acceso/${slug}/${key}`
+    navigator.clipboard.writeText(link).then(() => {
+      setCopiedDoorLink(true)
+      setTimeout(() => setCopiedDoorLink(false), 2500)
+    }).catch(() => {})
+  }
+
+  // Lista unificada para reportes de invitados
+  const allReportGuests = groups.flatMap((group) => {
+    if (group.guests && group.guests.length > 0) {
+      return group.guests.map((g) => {
+        const tableIdx = tableItems.findIndex((t) => (t.guestIds || []).some((id) => String(id) === String(g.id)))
+        return {
+          id: String(g.id),
+          guestId: g.id,
+          groupId: group.id,
+          guestName: g.fullName,
+          groupName: group.contactName,
+          status: g.attendanceStatus || (group.status === 'CONFIRMED' ? 'CONFIRMED' : group.status || 'PENDING'),
+          tableIndex: tableIdx,
+          tableName: tableIdx >= 0 ? (tableItems[tableIdx].name || `Mesa ${tableIdx + 1}`) : null,
+          accessToken: group.accessToken,
+          isHolderOnly: false,
+          checkedIn: Boolean(g.checkedIn),
+          checkedInAt: g.checkedInAt,
+        }
+      })
+    }
+    return [{
+      id: `group-${group.id}`,
+      guestId: null,
+      groupId: group.id,
+      guestName: `${group.contactName} (Titular)`,
+      groupName: group.contactName,
+      status: group.status || 'PENDING',
+      tableIndex: -1,
+      tableName: null,
+      accessToken: group.accessToken,
+      isHolderOnly: true,
+      checkedIn: Boolean(group.checkedIn),
+      checkedInAt: group.checkedInAt,
+    }]
+  })
+
+  // Métricas y filtros para reportes de gestión
+  const totalMaxPasses = contentForm.maxRegisteredGuests || 0
+  const totalAssignedPasses = groups.reduce((acc, g) => acc + (g.maxGuestsAllowed || 0), 0)
+  const totalConfirmedPasses = groups.reduce((acc, g) => acc + (g.confirmedGuests || 0), 0)
+  const totalRegisteredGuests = groups.reduce((acc, g) => acc + (g.registeredGuests || 0), 0)
+
+  const confirmedGuestsOnly = allReportGuests.filter((g) => g.status === 'CONFIRMED')
+  const pendingGuestsOnly = allReportGuests.filter((g) => g.status === 'PENDING')
+  const declinedGuestsOnly = allReportGuests.filter((g) => g.status === 'DECLINED')
+  const unseatedConfirmed = confirmedGuestsOnly.filter((g) => g.tableIndex < 0)
+  const seatedConfirmed = confirmedGuestsOnly.filter((g) => g.tableIndex >= 0)
+  const checkedInGuestsOnly = allReportGuests.filter((g) => g.checkedIn)
+
+  const totalTableCapacity = tableItems.reduce((acc, t) => acc + (Number(t.capacity) || 0), 0)
+  const totalTableAssignedCount = tableItems.reduce((acc, t) => acc + (Array.isArray(t.guestIds) ? t.guestIds.length : 0), 0)
+
+  function handleColumnSort(colKey) {
+    if (sortColumn === colKey) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortColumn(colKey)
+      setSortDirection('asc')
+    }
+  }
+
+  function handleFilterChange(field, val) {
+    setColumnFilters((prev) => ({ ...prev, [field]: val }))
+  }
+
+  function handleClearFilters() {
+    setColumnFilters({
+      checkin: 'ALL',
+      guestName: '',
+      groupName: '',
+      status: 'ALL',
+      tableName: 'ALL',
+    })
+    setReportSearch('')
+    setReportFilter('ALL')
+  }
+
+  const isAnyFilterActive =
+    Boolean(reportSearch) ||
+    reportFilter !== 'ALL' ||
+    columnFilters.checkin !== 'ALL' ||
+    Boolean(columnFilters.guestName.trim()) ||
+    Boolean(columnFilters.groupName.trim()) ||
+    columnFilters.status !== 'ALL' ||
+    columnFilters.tableName !== 'ALL'
+
+  const filteredReportGuests = allReportGuests
+    .filter((g) => {
+      // Búsqueda global
+      if (reportSearch) {
+        const q = reportSearch.toLowerCase()
+        const matchesSearch =
+          (g.guestName || '').toLowerCase().includes(q) ||
+          (g.groupName || '').toLowerCase().includes(q) ||
+          (g.tableName && g.tableName.toLowerCase().includes(q))
+        if (!matchesSearch) return false
+      }
+
+      // Filtro de pastillas rápidas
+      if (reportFilter === 'CONFIRMED' && g.status !== 'CONFIRMED') return false
+      if (reportFilter === 'PENDING' && g.status !== 'PENDING') return false
+      if (reportFilter === 'DECLINED' && g.status !== 'DECLINED') return false
+      if (reportFilter === 'UNSEATED' && !(g.status === 'CONFIRMED' && g.tableIndex < 0)) return false
+
+      // Filtros en columnas
+      if (columnFilters.checkin === 'CHECKED' && !g.checkedIn) return false
+      if (columnFilters.checkin === 'UNCHECKED' && g.checkedIn) return false
+
+      if (columnFilters.guestName.trim()) {
+        const qName = columnFilters.guestName.trim().toLowerCase()
+        if (!(g.guestName || '').toLowerCase().includes(qName)) return false
+      }
+
+      if (columnFilters.groupName.trim()) {
+        const qGroup = columnFilters.groupName.trim().toLowerCase()
+        if (!(g.groupName || '').toLowerCase().includes(qGroup)) return false
+      }
+
+      if (columnFilters.status !== 'ALL' && g.status !== columnFilters.status) return false
+
+      if (columnFilters.tableName === 'UNSEATED') {
+        if (g.status === 'CONFIRMED' && g.tableName) return false
+      } else if (columnFilters.tableName !== 'ALL') {
+        if (g.tableName !== columnFilters.tableName) return false
+      }
+
+      return true
+    })
+    .sort((a, b) => {
+      let valA = ''
+      let valB = ''
+
+      if (sortColumn === 'checkin') {
+        valA = a.checkedIn ? 1 : 0
+        valB = b.checkedIn ? 1 : 0
+        return sortDirection === 'asc' ? valA - valB : valB - valA
+      } else if (sortColumn === 'guestName') {
+        valA = a.guestName || ''
+        valB = b.guestName || ''
+      } else if (sortColumn === 'groupName') {
+        valA = a.groupName || ''
+        valB = b.groupName || ''
+      } else if (sortColumn === 'status') {
+        valA = a.status || ''
+        valB = b.status || ''
+      } else if (sortColumn === 'tableName') {
+        valA = a.tableName || 'ZZZ'
+        valB = b.tableName || 'ZZZ'
+      }
+
+      const cmp = String(valA).localeCompare(String(valB), 'es', { sensitivity: 'base' })
+      return sortDirection === 'asc' ? cmp : -cmp
+    })
+
+  // Ordenamiento para vista de grupos familiares
+  function handleGroupSort(col) {
+    if (groupSortColumn === col) {
+      setGroupSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setGroupSortColumn(col)
+      setGroupSortDirection('asc')
+    }
+  }
+
+  const sortedGroups = [...groups]
+    .filter((grp) => {
+      if (!groupSearch.trim()) return true
+      const q = groupSearch.toLowerCase()
+      const matchName = (grp.contactName || '').toLowerCase().includes(q)
+      const matchMember = (grp.guests || []).some((g) => (g.fullName || '').toLowerCase().includes(q))
+      return matchName || matchMember
+    })
+    .sort((a, b) => {
+      let valA = ''
+      let valB = ''
+      if (groupSortColumn === 'contactName') {
+        valA = a.contactName || ''
+        valB = b.contactName || ''
+      } else if (groupSortColumn === 'maxGuestsAllowed') {
+        valA = a.maxGuestsAllowed || 0
+        valB = b.maxGuestsAllowed || 0
+        return groupSortDirection === 'asc' ? valA - valB : valB - valA
+      } else if (groupSortColumn === 'confirmedGuests') {
+        valA = a.confirmedGuests || 0
+        valB = b.confirmedGuests || 0
+        return groupSortDirection === 'asc' ? valA - valB : valB - valA
+      } else if (groupSortColumn === 'status') {
+        valA = a.status || ''
+        valB = b.status || ''
+      }
+      const cmp = String(valA).localeCompare(String(valB), 'es', { sensitivity: 'base' })
+      return groupSortDirection === 'asc' ? cmp : -cmp
+    })
+
+  function handleExportCsv() {
+    const currentWedding = weddings.find((w) => String(w.id) === String(weddingId))
+    const slug = currentWedding?.invitationSlug || contentForm.invitationSlug || 'boda'
+    const rows = [
+      ['Nro', 'Grupo Familiar', 'Nombre del Invitado', 'Estado RSVP', 'Pases Familia', 'Mesa Asignada', 'Ingreso en Puerta', 'Enlace Personalizado RSVP']
+    ]
+
+    allReportGuests.forEach((g, idx) => {
+      const link = `${window.location.origin}/invitacion/${slug}/rsvp/${g.accessToken}`
+      const statusLabel = g.status === 'CONFIRMED' ? 'Confirmado' : (g.status === 'DECLINED' ? 'No asiste' : 'Pendiente')
+      const isCheckedIn = g.checkedIn ? 'SÍ' : 'NO'
+      const tableText = g.tableName || (g.status === 'CONFIRMED' ? 'SIN MESA' : 'N/A')
+      const groupData = groups.find((grp) => grp.id === g.groupId)
+
+      rows.push([
+        idx + 1,
+        `"${(g.groupName || '').replace(/"/g, '""')}"`,
+        `"${(g.guestName || '').replace(/"/g, '""')}"`,
+        `"${statusLabel}"`,
+        groupData?.maxGuestsAllowed || 1,
+        `"${tableText.replace(/"/g, '""')}"`,
+        `"${isCheckedIn}"`,
+        `"${link}"`
+      ])
+    })
+
+    const csvContent = '\uFEFF' + rows.map((e) => e.join(';')).join('\n')
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `Padron_Invitados_${slug}_${new Date().toISOString().slice(0, 10)}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  function handlePrintDoorList() {
+    // Gather guests sorted alphabetically for print
+    const allGuests = groups.flatMap((group) => {
+      if (group.guests && group.guests.length > 0) {
+        return group.guests.map((g) => {
+          const tIdx = tableItems.findIndex((t) => (t.guestIds || []).some((id) => String(id) === String(g.id)))
+          return {
+            name: g.fullName,
+            group: group.contactName,
+            status: g.attendanceStatus || 'PENDING',
+            table: tIdx >= 0 ? (tableItems[tIdx].name || `Mesa ${tIdx + 1}`) : '—',
+          }
+        })
+      }
+      return [{
+        name: group.contactName,
+        group: group.contactName,
+        status: group.status || 'PENDING',
+        table: '—',
+      }]
+    })
+    allGuests.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }))
+
+    const statusLabel = (s) => {
+      if (s === 'CONFIRMED') return 'Confirmado'
+      if (s === 'DECLINED') return 'No asiste'
+      return 'Pendiente'
+    }
+
+    const rows = allGuests.map((g, i) => `
+      <tr class="${g.status === 'CONFIRMED' ? 'row-confirmed' : g.status === 'DECLINED' ? 'row-declined' : 'row-pending'}">
+        <td class="td-num">${i + 1}</td>
+        <td>${g.name}</td>
+        <td>${g.group}</td>
+        <td class="td-status">${statusLabel(g.status)}</td>
+        <td>${g.table}</td>
+      </tr>
+    `).join('')
+
+    const weddingTitle = contentForm.title || `${contentForm.partnerOneName} & ${contentForm.partnerTwoName}`
+    const weddingDate = contentForm.weddingDate || ''
+    const confirmed = allGuests.filter((g) => g.status === 'CONFIRMED').length
+
+    const html = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Lista de Invitados – ${weddingTitle}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, 'Times New Roman', serif; background: #fff; color: #111; padding: 32px 40px; }
+    .page-header { text-align: center; border-bottom: 2px solid #8b6c42; padding-bottom: 18px; margin-bottom: 24px; }
+    .page-header h1 { font-size: 22px; letter-spacing: 0.05em; color: #3a2a14; }
+    .page-header p { font-size: 13px; color: #555; margin-top: 4px; }
+    .summary { display: flex; gap: 40px; justify-content: center; margin-bottom: 20px; }
+    .summary-item { text-align: center; }
+    .summary-item strong { display: block; font-size: 24px; color: #3a2a14; }
+    .summary-item span { font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; color: #666; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead th { background: #f5ede0; color: #3a2a14; font-weight: bold; text-align: left; padding: 8px 10px; border-bottom: 2px solid #c8a96a; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; }
+    tbody td { padding: 7px 10px; border-bottom: 1px solid #e8dece; vertical-align: middle; }
+    .td-num { text-align: center; width: 36px; color: #888; font-size: 11px; }
+    .td-status { font-weight: bold; width: 100px; }
+    .row-confirmed .td-status { color: #2e7d32; }
+    .row-declined .td-status { color: #b71c1c; }
+    .row-pending .td-status { color: #b45309; }
+    .row-confirmed { background: #f8fff8; }
+    .row-declined { background: #fff8f8; }
+    .page-footer { margin-top: 24px; text-align: center; font-size: 11px; color: #999; }
+    @media print {
+      body { padding: 10px 20px; }
+      thead th { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <h1>Lista de Invitados</h1>
+    <p>${weddingTitle}${weddingDate ? ' · ' + weddingDate : ''}</p>
+  </div>
+  <div class="summary">
+    <div class="summary-item"><strong>${allGuests.length}</strong><span>Total invitados</span></div>
+    <div class="summary-item"><strong>${confirmed}</strong><span>Confirmados</span></div>
+    <div class="summary-item"><strong>${allGuests.filter(g => g.status === 'PENDING').length}</strong><span>Pendientes</span></div>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Nombre</th><th>Grupo familiar</th><th>Estado</th><th>Mesa</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table>
+  <div class="page-footer">Generado el ${new Date().toLocaleDateString('es-PE', { dateStyle: 'full' })}</div>
+  <script>window.onload = function() { window.print(); }<\/script>
+</body>
+</html>`
+
+    const printWin = window.open('', '_blank', 'width=900,height=650')
+    if (printWin) {
+      printWin.document.write(html)
+      printWin.document.close()
+    }
+  }
+
   if (!token) {
     return (
       <main className="admin-page">
@@ -787,6 +1241,7 @@ function AdminPage() {
         </div>
         <nav className="admin-tabs" aria-label="Secciones del panel">
           <button className={activeTab === 'summary' ? 'active' : ''} type="button" onClick={() => setActiveTab('summary')}>Resumen</button>
+          <button className={activeTab === 'reports' ? 'active' : ''} type="button" onClick={() => setActiveTab('reports')}>Reportes &amp; Puerta</button>
           <button className={activeTab === 'photos' ? 'active' : ''} type="button" onClick={() => setActiveTab('photos')}>Galería</button>
           <button className={activeTab === 'music' ? 'active' : ''} type="button" onClick={() => setActiveTab('music')}>Música</button>
           <button className={activeTab === 'groups' ? 'active' : ''} type="button" onClick={() => setActiveTab('groups')}>Grupos familiares</button>
@@ -1196,28 +1651,28 @@ function AdminPage() {
                 <button
                   type="button"
                   className="quick-palette-btn"
-                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#7A1C2E', accentColor: '#B79A62', backgroundColor: '#F9F4F0' })}
+                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#7A1C2E', accentColor: '#B79A62', backgroundColor: '#F9F4F0', lateralColor: '#EFE7E2' })}
                 >
                   <span className="dot" style={{ background: '#7A1C2E' }} /> Borgoña & Oro
                 </button>
                 <button
                   type="button"
                   className="quick-palette-btn"
-                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#7FB3A8', accentColor: '#B79A62', backgroundColor: '#F4F1EA' })}
+                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#7FB3A8', accentColor: '#B79A62', backgroundColor: '#F4F1EA', lateralColor: '#E2EBE8' })}
                 >
                   <span className="dot" style={{ background: '#7FB3A8' }} /> Salvia Clásico
                 </button>
                 <button
                   type="button"
                   className="quick-palette-btn"
-                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#2C3E50', accentColor: '#D4AF37', backgroundColor: '#F8F9FA' })}
+                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#2C3E50', accentColor: '#D4AF37', backgroundColor: '#F8F9FA', lateralColor: '#E6ECF2' })}
                 >
                   <span className="dot" style={{ background: '#2C3E50' }} /> Azul Noche & Oro
                 </button>
                 <button
                   type="button"
                   className="quick-palette-btn"
-                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#B85D36', accentColor: '#9E7D55', backgroundColor: '#FAF6F0' })}
+                  onClick={() => setContentForm({ ...contentForm, primaryColor: '#B85D36', accentColor: '#9E7D55', backgroundColor: '#FAF6F0', lateralColor: '#F2E8DF' })}
                 >
                   <span className="dot" style={{ background: '#B85D36' }} /> Terracota Boho
                 </button>
@@ -1244,6 +1699,13 @@ function AdminPage() {
                 purpose="Fondo de la pantalla de inicio (con velo sobre las rosas en acuarela), pliegos y lienzos de la invitación"
                 value={contentForm.backgroundColor || '#F4F1EA'}
                 onChange={(val) => setContentForm({ ...contentForm, backgroundColor: val })}
+              />
+              <ColorFieldControl
+                label="Color de los laterales"
+                badge="Bordes y Fondo Exterior"
+                purpose="Fondo que rodea y enmarca la invitación en computadoras y tablets (laterales izquierdo y derecho)"
+                value={contentForm.lateralColor || '#E8EFE9'}
+                onChange={(val) => setContentForm({ ...contentForm, lateralColor: val })}
               />
             </div>
           </div>
@@ -1296,7 +1758,810 @@ function AdminPage() {
           )}
         </form>}
 
-        {activeTab === 'summary' && <section className="summary-section"><h2>Resumen</h2><p>Gestiona el contenido de <strong>{contentForm.title || weddings.find((wedding) => String(wedding.id) === String(weddingId))?.title}</strong> desde las pestañas del panel.</p><div className="summary-metrics"><article><strong>{contentForm.maxRegisteredGuests || 0}</strong><span>Pases máximos</span></article><article><strong>{groups.reduce((total, group) => total + (group.confirmedGuests || 0), 0)}</strong><span>Personas confirmadas</span></article><article><strong>{groups.reduce((total, group) => total + (group.registeredGuests || 0), 0)}</strong><span>Personas registradas</span></article><article><strong>{groups.length}</strong><span>Grupos familiares</span></article><article><strong>{photos.length}</strong><span>Fotos publicadas</span></article><article><strong>{contentForm.maxRegisteredGuests ? Math.round((groups.reduce((total, group) => total + (group.confirmedGuests || 0), 0) / contentForm.maxRegisteredGuests) * 100) : 0}%</strong><span>Personas confirmadas del máximo</span></article></div><p className="summary-note">Fecha del evento: <strong>{contentForm.weddingDate || 'Por confirmar'}</strong></p></section>}
+        {activeTab === 'reports' && (
+          <section className="reports-section">
+            <div className="reports-header-bar">
+              <div>
+                <h2>Reportes de Gestión y Control</h2>
+                <p className="reports-subtitle">
+                  Supervisa la confirmación de pases, la nómina oficial para el acceso en puerta y la ocupación de mesas para {contentForm.title || 'tu boda'}.
+                </p>
+              </div>
+              <div className="reports-action-buttons">
+                <button type="button" className="secondary-button export-btn" onClick={handleExportCsv} title="Descargar padrón completo en formato Excel / CSV">
+                  <IconDownload size={16} />
+                  <span>Exportar a Excel (CSV)</span>
+                </button>
+                <button type="button" className="primary-button print-btn" onClick={handlePrintDoorList} title="Abrir e imprimir lista de invitados">
+                  <IconPrinter size={16} />
+                  <span>Lista de invitados</span>
+                </button>
+              </div>
+            </div>
+
+            {/* TARJETA DE ENLACE PÚBLICO PARA SEGURIDAD / RECEPCIÓN */}
+            <div className="door-access-share-card">
+              <div className="door-share-left">
+                <div className="door-share-icon-wrap">
+                  <IconShieldCheck size={28} color="#2e7d32" />
+                </div>
+                <div className="door-share-info">
+                  <div className="door-share-badge">Control Oficial de Ingreso</div>
+                  <h4>Enlace Público para Personal de Seguridad / Recepción</h4>
+                  <p>
+                    Comparte este enlace exclusivo con la persona o personal de seguridad encargado del control de puerta.
+                    Podrán buscar invitados en tiempo real, validar su mesa y marcar el ingreso desde su celular sin iniciar sesión.
+                  </p>
+                </div>
+              </div>
+              <div className="door-share-right">
+                <div className="door-share-link-preview">
+                  <code>{`${window.location.origin}/control-acceso/${contentForm.invitationSlug || 'boda'}/${contentForm.doorAccessKey || ''}`}</code>
+                </div>
+                <div className="door-share-btn-row">
+                  <button
+                    type="button"
+                    className="primary-button door-copy-btn"
+                    onClick={copyDoorAccessLink}
+                  >
+                    <IconCopy size={16} />
+                    <span>{copiedDoorLink ? '¡Enlace Copiado!' : 'Copiar Enlace de Puerta'}</span>
+                  </button>
+                  <a
+                    href={`${window.location.origin}/control-acceso/${contentForm.invitationSlug || 'boda'}/${contentForm.doorAccessKey || ''}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="secondary-button door-open-btn"
+                  >
+                    <IconExternalLink size={16} />
+                    <span>Abrir Pantalla</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Tarjetas KPI de control */}
+            <div className="reports-kpi-grid">
+              <article className="report-kpi-card kpi-confirmed">
+                <div className="kpi-top">
+                  <span className="kpi-icon icon-confirmed">
+                    <IconCheckCircle size={22} color="#2e7d32" />
+                  </span>
+                  <span className="kpi-badge badge-green">{totalMaxPasses ? `${Math.round((totalConfirmedPasses / totalMaxPasses) * 100)}% del cupo` : 'Confirmados'}</span>
+                </div>
+                <strong>{totalConfirmedPasses}</strong>
+                <span className="kpi-label">Pases Confirmados</span>
+                <small className="kpi-detail">{confirmedGuestsOnly.length} personas registradas con asistencia</small>
+              </article>
+
+              <article className="report-kpi-card kpi-pending">
+                <div className="kpi-top">
+                  <span className="kpi-icon icon-pending">
+                    <IconClock size={22} color="#b45309" />
+                  </span>
+                  <span className="kpi-badge badge-amber">{pendingGuestsOnly.length} pendientes</span>
+                </div>
+                <strong>{pendingGuestsOnly.length}</strong>
+                <span className="kpi-label">Pendientes por Responder</span>
+                <small className="kpi-detail">Esperando confirmación de RSVP</small>
+              </article>
+
+              <article className="report-kpi-card kpi-declined">
+                <div className="kpi-top">
+                  <span className="kpi-icon icon-declined">
+                    <IconXCircle size={22} color="#6b7280" />
+                  </span>
+                  <span className="kpi-badge badge-gray">{declinedGuestsOnly.length} declinados</span>
+                </div>
+                <strong>{declinedGuestsOnly.length}</strong>
+                <span className="kpi-label">No Asisten</span>
+                <small className="kpi-detail">Pases no utilizados / liberados</small>
+              </article>
+
+              <article className={`report-kpi-card kpi-tables ${unseatedConfirmed.length > 0 ? 'kpi-alert' : ''}`}>
+                <div className="kpi-top">
+                  <span className="kpi-icon icon-tables">
+                    <IconTable size={22} color={unseatedConfirmed.length > 0 ? '#b91c1c' : '#2e7d32'} />
+                  </span>
+                  <span className={`kpi-badge ${unseatedConfirmed.length > 0 ? 'badge-alert' : 'badge-green'}`}>
+                    {unseatedConfirmed.length > 0 ? `${unseatedConfirmed.length} sin mesa` : '100% asignados'}
+                  </span>
+                </div>
+                <strong>{unseatedConfirmed.length}</strong>
+                <span className="kpi-label">Confirmados sin Mesa</span>
+                <small className="kpi-detail">{seatedConfirmed.length} de {confirmedGuestsOnly.length} con asiento asignado</small>
+              </article>
+
+              <article className="report-kpi-card kpi-capacity">
+                <div className="kpi-top">
+                  <span className="kpi-icon icon-capacity">
+                    <IconUtensils size={22} color="#1d4ed8" />
+                  </span>
+                  <span className="kpi-badge badge-blue">{totalTableCapacity > 0 ? `${Math.round((totalTableAssignedCount / totalTableCapacity) * 100)}% ocupación` : 'Sin mesas'}</span>
+                </div>
+                <strong>{totalTableAssignedCount} / {totalTableCapacity || '∞'}</strong>
+                <span className="kpi-label">Asientos en Mesas</span>
+                <small className="kpi-detail">{tableItems.length} mesas configuradas en total</small>
+              </article>
+
+              <article className="report-kpi-card kpi-passes">
+                <div className="kpi-top">
+                  <span className="kpi-icon icon-passes">
+                    <IconTicket size={22} color="#6d28d9" />
+                  </span>
+                  <span className="kpi-badge badge-purple">{groups.length} familias</span>
+                </div>
+                <strong>{totalAssignedPasses} / {totalMaxPasses}</strong>
+                <span className="kpi-label">Pases Distribuidos</span>
+                <small className="kpi-detail">Cupo máximo de la boda: {totalMaxPasses}</small>
+              </article>
+            </div>
+
+            {/* Sub-navegación de reportes */}
+            <div className="reports-subnav">
+              <button
+                type="button"
+                className={`subnav-pill ${reportSubTab === 'doorlist' ? 'active' : ''}`}
+                onClick={() => setReportSubTab('doorlist')}
+              >
+                <IconDoorCheck size={16} />
+                <span>Padrón de Puerta &amp; Check-in ({allReportGuests.length})</span>
+              </button>
+              <button
+                type="button"
+                className={`subnav-pill ${reportSubTab === 'tables' ? 'active' : ''}`}
+                onClick={() => setReportSubTab('tables')}
+              >
+                <IconTable size={16} />
+                <span>Distribución y Ocupación de Mesas ({tableItems.length})</span>
+              </button>
+              <button
+                type="button"
+                className={`subnav-pill ${reportSubTab === 'groups' ? 'active' : ''}`}
+                onClick={() => setReportSubTab('groups')}
+              >
+                <IconUsers size={16} />
+                <span>Control por Grupos Familiares ({groups.length})</span>
+              </button>
+            </div>
+
+            {/* VISTA 1: PADRÓN DE PUERTA / CHECK-IN */}
+            {reportSubTab === 'doorlist' && (
+              <div className="report-view-doorlist">
+                <div className="report-filter-bar">
+                  <div className="report-search-box">
+                    <IconSearch size={17} className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Buscar por invitado, familia o mesa..."
+                      value={reportSearch}
+                      onChange={(e) => setReportSearch(e.target.value)}
+                    />
+                    {reportSearch && (
+                      <button type="button" className="clear-search-btn" onClick={() => setReportSearch('')}>✕</button>
+                    )}
+                  </div>
+
+                  <div className="report-filter-pills">
+                    <button
+                      type="button"
+                      className={`filter-pill ${reportFilter === 'ALL' ? 'active' : ''}`}
+                      onClick={() => setReportFilter('ALL')}
+                    >
+                      Todos ({allReportGuests.length})
+                    </button>
+                    <button
+                      type="button"
+                      className={`filter-pill ${reportFilter === 'CONFIRMED' ? 'active' : ''}`}
+                      onClick={() => setReportFilter('CONFIRMED')}
+                    >
+                      Confirmados ({confirmedGuestsOnly.length})
+                    </button>
+                    <button
+                      type="button"
+                      className={`filter-pill ${reportFilter === 'PENDING' ? 'active' : ''}`}
+                      onClick={() => setReportFilter('PENDING')}
+                    >
+                      Pendientes ({pendingGuestsOnly.length})
+                    </button>
+                    <button
+                      type="button"
+                      className={`filter-pill ${reportFilter === 'DECLINED' ? 'active' : ''}`}
+                      onClick={() => setReportFilter('DECLINED')}
+                    >
+                      No asisten ({declinedGuestsOnly.length})
+                    </button>
+                    <button
+                      type="button"
+                      className={`filter-pill alert-pill ${reportFilter === 'UNSEATED' ? 'active' : ''}`}
+                      onClick={() => setReportFilter('UNSEATED')}
+                    >
+                      Sin Mesa ({unseatedConfirmed.length})
+                    </button>
+                  </div>
+
+                  <div className="report-checkin-counter">
+                    <IconCheckCircle size={15} color="#2e7d32" />
+                    <span>Ingresaron:</span>
+                    <strong>{checkedInGuestsOnly.length}</strong> / {confirmedGuestsOnly.length} confirmados
+                  </div>
+                </div>
+
+                <div className="printable-report-wrapper">
+                  <div className="print-report-header">
+                    <h2>LISTA OFICIAL DE ACCESO Y RECEPCIÓN</h2>
+                    <p><strong>Boda:</strong> {contentForm.title || `${contentForm.partnerOneName} & ${contentForm.partnerTwoName}`} · <strong>Fecha:</strong> {contentForm.weddingDate || 'Por confirmar'}</p>
+                    <p><strong>Confirmados totales:</strong> {totalConfirmedPasses} pases · <strong>Mesas configuradas:</strong> {tableItems.length}</p>
+                  </div>
+
+                  <div className="table-responsive report-table-scroll">
+                    <table className="report-data-table sortable-table">
+                      <thead>
+                        <tr>
+                          {/* 1. Ingreso */}
+                          <th
+                            style={{ width: '85px', textAlign: 'center', cursor: 'pointer' }}
+                            onClick={() => handleColumnSort('checkin')}
+                            className={`sortable-th ${sortColumn === 'checkin' ? 'active-sort' : ''}`}
+                            title="Ordenar por estado de ingreso"
+                          >
+                            <div className="th-content center-th">
+                              <span>Ingreso</span>
+                              {sortColumn === 'checkin' ? (
+                                sortDirection === 'asc' ? <IconSortAsc /> : <IconSortDesc />
+                              ) : (
+                                <IconSortDefault />
+                              )}
+                            </div>
+                          </th>
+
+                          {/* 2. # */}
+                          <th style={{ width: '40px', textAlign: 'center' }}>#</th>
+
+                          {/* 3. Invitado */}
+                          <th
+                            onClick={() => handleColumnSort('guestName')}
+                            className={`sortable-th ${sortColumn === 'guestName' ? 'active-sort' : ''}`}
+                            title="Ordenar por nombre de invitado"
+                          >
+                            <div className="th-content">
+                              <span>Invitado</span>
+                              {sortColumn === 'guestName' ? (
+                                sortDirection === 'asc' ? <IconSortAsc /> : <IconSortDesc />
+                              ) : (
+                                <IconSortDefault />
+                              )}
+                            </div>
+                          </th>
+
+                          {/* 4. Grupo Familiar */}
+                          <th
+                            onClick={() => handleColumnSort('groupName')}
+                            className={`sortable-th ${sortColumn === 'groupName' ? 'active-sort' : ''}`}
+                            title="Ordenar por grupo familiar"
+                          >
+                            <div className="th-content">
+                              <span>Grupo Familiar</span>
+                              {sortColumn === 'groupName' ? (
+                                sortDirection === 'asc' ? <IconSortAsc /> : <IconSortDesc />
+                              ) : (
+                                <IconSortDefault />
+                              )}
+                            </div>
+                          </th>
+
+                          {/* 5. Estado RSVP */}
+                          <th
+                            style={{ width: '140px' }}
+                            onClick={() => handleColumnSort('status')}
+                            className={`sortable-th ${sortColumn === 'status' ? 'active-sort' : ''}`}
+                            title="Ordenar por estado RSVP"
+                          >
+                            <div className="th-content">
+                              <span>Estado RSVP</span>
+                              {sortColumn === 'status' ? (
+                                sortDirection === 'asc' ? <IconSortAsc /> : <IconSortDesc />
+                              ) : (
+                                <IconSortDefault />
+                              )}
+                            </div>
+                          </th>
+
+                          {/* 6. Mesa Asignada */}
+                          <th
+                            style={{ width: '160px' }}
+                            onClick={() => handleColumnSort('tableName')}
+                            className={`sortable-th ${sortColumn === 'tableName' ? 'active-sort' : ''}`}
+                            title="Ordenar por mesa asignada"
+                          >
+                            <div className="th-content">
+                              <span>Mesa Asignada</span>
+                              {sortColumn === 'tableName' ? (
+                                sortDirection === 'asc' ? <IconSortAsc /> : <IconSortDesc />
+                              ) : (
+                                <IconSortDefault />
+                              )}
+                            </div>
+                          </th>
+
+                          {/* 7. Acciones */}
+                          <th style={{ width: '120px', textAlign: 'center' }} className="no-print">
+                            {isAnyFilterActive ? (
+                              <button
+                                type="button"
+                                className="col-filter-reset-pill header-reset-btn"
+                                onClick={handleClearFilters}
+                                title="Limpiar todos los filtros"
+                              >
+                                Limpiar
+                              </button>
+                            ) : (
+                              <span>Invitación</span>
+                            )}
+                          </th>
+                        </tr>
+
+                        {/* FILA DE FILTROS EN COLUMNAS */}
+                        <tr className="col-filter-row no-print">
+                          {/* Filtro Ingreso */}
+                          <th className="filter-cell">
+                            <select
+                              value={columnFilters.checkin}
+                              onChange={(e) => handleFilterChange('checkin', e.target.value)}
+                              className="col-filter-select"
+                              title="Filtrar por ingreso"
+                            >
+                              <option value="ALL">Todos</option>
+                              <option value="CHECKED">Ingresó</option>
+                              <option value="UNCHECKED">Por ingresar</option>
+                            </select>
+                          </th>
+
+                          {/* # */}
+                          <th className="filter-cell" />
+
+                          {/* Filtro Invitado */}
+                          <th className="filter-cell">
+                            <div className="col-filter-input-wrap">
+                              <input
+                                type="text"
+                                placeholder="Filtrar invitado..."
+                                value={columnFilters.guestName}
+                                onChange={(e) => handleFilterChange('guestName', e.target.value)}
+                                className="col-filter-input"
+                              />
+                              {columnFilters.guestName && (
+                                <button
+                                  type="button"
+                                  className="col-filter-clear-x"
+                                  onClick={() => handleFilterChange('guestName', '')}
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          </th>
+
+                          {/* Filtro Grupo */}
+                          <th className="filter-cell">
+                            <div className="col-filter-input-wrap">
+                              <input
+                                type="text"
+                                placeholder="Filtrar grupo..."
+                                value={columnFilters.groupName}
+                                onChange={(e) => handleFilterChange('groupName', e.target.value)}
+                                className="col-filter-input"
+                              />
+                              {columnFilters.groupName && (
+                                <button
+                                  type="button"
+                                  className="col-filter-clear-x"
+                                  onClick={() => handleFilterChange('groupName', '')}
+                                >
+                                  ✕
+                                </button>
+                              )}
+                            </div>
+                          </th>
+
+                          {/* Filtro Estado RSVP */}
+                          <th className="filter-cell">
+                            <select
+                              value={columnFilters.status}
+                              onChange={(e) => handleFilterChange('status', e.target.value)}
+                              className="col-filter-select"
+                            >
+                              <option value="ALL">Todos</option>
+                              <option value="CONFIRMED">Confirmado</option>
+                              <option value="PENDING">Pendiente</option>
+                              <option value="DECLINED">No asiste</option>
+                            </select>
+                          </th>
+
+                          {/* Filtro Mesa */}
+                          <th className="filter-cell">
+                            <select
+                              value={columnFilters.tableName}
+                              onChange={(e) => handleFilterChange('tableName', e.target.value)}
+                              className="col-filter-select"
+                            >
+                              <option value="ALL">Todas las mesas</option>
+                              <option value="UNSEATED">Sin mesa asignada</option>
+                              {tableItems.map((table, idx) => {
+                                const tName = table.name || `Mesa ${idx + 1}`
+                                return (
+                                  <option key={`opt-table-${idx}`} value={tName}>
+                                    {tName}
+                                  </option>
+                                )
+                              })}
+                            </select>
+                          </th>
+
+                          {/* Limpiar */}
+                          <th className="filter-cell" style={{ textAlign: 'center' }}>
+                            {isAnyFilterActive && (
+                              <button
+                                type="button"
+                                className="col-filter-reset-pill"
+                                onClick={handleClearFilters}
+                                title="Limpiar filtros"
+                              >
+                                Limpiar
+                              </button>
+                            )}
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredReportGuests.map((g, idx) => {
+                          const isChecked = Boolean(g.checkedIn)
+                          return (
+                            <tr key={g.id} className={`${isChecked ? 'row-checked-in' : ''} ${g.status === 'CONFIRMED' && !g.tableName ? 'row-unseated-warning' : ''}`}>
+                              <td style={{ textAlign: 'center' }}>
+                                <input
+                                  type="checkbox"
+                                  className="door-check-input"
+                                  checked={isChecked}
+                                  onChange={() => toggleDoorCheckIn(g)}
+                                  title="Marcar ingreso en recepción"
+                                />
+                              </td>
+                              <td style={{ color: '#888', fontSize: '0.82rem', textAlign: 'center' }}>{idx + 1}</td>
+                              <td>
+                                <strong className="guest-name-cell">{g.guestName}</strong>
+                                {g.isHolderOnly && <span className="holder-badge">Titular</span>}
+                                {isChecked && g.checkedInAt && (
+                                  <div className="checkin-time-micro">
+                                    <IconCheck size={11} color="#2e7d32" />
+                                    <span>{new Date(g.checkedInAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                  </div>
+                                )}
+                              </td>
+                              <td>{g.groupName}</td>
+                              <td>
+                                {g.status === 'CONFIRMED' && <span className="report-status-badge badge-green">Confirmado</span>}
+                                {g.status === 'PENDING' && <span className="report-status-badge badge-amber">Pendiente</span>}
+                                {g.status === 'DECLINED' && <span className="report-status-badge badge-gray">No asiste</span>}
+                              </td>
+                              <td>
+                                {g.tableName ? (
+                                  <span className="report-table-tag">
+                                    <IconTable size={12} />
+                                    <span>{g.tableName}</span>
+                                  </span>
+                                ) : g.status === 'CONFIRMED' ? (
+                                  <span className="report-table-tag tag-warning">
+                                    <IconAlertTriangle size={12} />
+                                    <span>Sin mesa</span>
+                                  </span>
+                                ) : (
+                                  <span className="report-table-tag tag-muted">—</span>
+                                )}
+                              </td>
+                              <td className="no-print" style={{ textAlign: 'center' }}>
+                                <button
+                                  type="button"
+                                  className="link-copy-btn"
+                                  onClick={() => copyRsvpLink(g.accessToken)}
+                                  title="Copiar enlace personalizado de RSVP"
+                                >
+                                  <IconCopy size={13} />
+                                  <span>{copiedLinkToken === g.accessToken ? 'Copiado' : 'Link RSVP'}</span>
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })}
+                        {filteredReportGuests.length === 0 && (
+                          <tr>
+                            <td colSpan="7" style={{ textAlign: 'center', padding: '36px 12px', color: '#777' }}>
+                              No se encontraron invitados con los filtros seleccionados.
+                              {isAnyFilterActive && (
+                                <div style={{ marginTop: '10px' }}>
+                                  <button type="button" className="secondary-button" onClick={handleClearFilters}>
+                                    Limpiar todos los filtros
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* VISTA 2: DISTRIBUCIÓN Y OCUPACIÓN DE MESAS */}
+            {reportSubTab === 'tables' && (
+              <div className="report-view-tables">
+                {unseatedConfirmed.length > 0 && (
+                  <div className="unseated-alert-banner">
+                    <div className="alert-text">
+                      <div className="alert-title-row">
+                        <IconAlertTriangle size={20} color="#b45309" />
+                        <h4>{unseatedConfirmed.length} invitado(s) confirmado(s) aún no tienen mesa asignada</h4>
+                      </div>
+                      <p>Para garantizar su lugar, ve a la pestaña <strong>Contenido</strong> y asígnalos a una mesa:</p>
+                      <div className="unseated-chips-wrap">
+                        {unseatedConfirmed.map((g) => (
+                          <span key={g.id} className="unseated-chip">{g.guestName} <small>({g.groupName})</small></span>
+                        ))}
+                      </div>
+                    </div>
+                    <button type="button" className="primary-button" onClick={() => setActiveTab('content')}>
+                      Asignar Mesas Ahora
+                    </button>
+                  </div>
+                )}
+
+                <div className="report-tables-summary-row">
+                  <div className="summary-title-wrap">
+                    <IconTable size={20} color="#333" />
+                    <h3>Mesas Registradas ({tableItems.length})</h3>
+                  </div>
+                  <span>Capacidad total configurada: <strong>{totalTableCapacity}</strong> personas · Asientos ocupados: <strong>{totalTableAssignedCount}</strong></span>
+                </div>
+
+                <div className="report-tables-cards-grid">
+                  {tableItems.map((table, idx) => {
+                    const seatedInTable = confirmedGuestsOnly.filter((g) => (table.guestIds || []).some((id) => String(id) === String(g.id)))
+                    const capacity = Number(table.capacity) || 0
+                    const count = seatedInTable.length
+                    const isFull = capacity > 0 && count >= capacity
+                    const isOver = capacity > 0 && count > capacity
+                    const pct = capacity > 0 ? Math.min(Math.round((count / capacity) * 100), 100) : 0
+
+                    return (
+                      <article key={`table-report-${idx}`} className={`table-report-card ${isOver ? 'card-over' : isFull ? 'card-full' : ''}`}>
+                        <div className="table-card-top">
+                          <div>
+                            <h4>{table.name || `Mesa ${idx + 1}`}</h4>
+                            <span className="table-capacity-indicator">
+                              {count} de {capacity || '∞'} asientos ocupados
+                            </span>
+                          </div>
+                          <span className={`table-status-pill ${isOver ? 'pill-danger' : isFull ? 'pill-success' : 'pill-info'}`}>
+                            {isOver ? 'Sobrecupo' : isFull ? 'Completa' : `${capacity ? `${capacity - count} libres` : 'Espacio libre'}`}
+                          </span>
+                        </div>
+
+                        {capacity > 0 && (
+                          <div className="table-progress-bar">
+                            <div
+                              className={`progress-fill ${isOver ? 'fill-danger' : isFull ? 'fill-success' : 'fill-primary'}`}
+                              style={{ width: `${pct}%` }}
+                            />
+                          </div>
+                        )}
+
+                        <div className="table-guests-inside">
+                          <strong>Invitados ubicados:</strong>
+                          {seatedInTable.length > 0 ? (
+                            <ul>
+                              {seatedInTable.map((g) => (
+                                <li key={g.id}>
+                                  <span>{g.guestName}</span>
+                                  <small>{g.groupName}</small>
+                                </li>
+                              ))}
+                            </ul>
+                          ) : (
+                            <p className="table-empty-msg">No hay invitados asignados en esta mesa todavía.</p>
+                          )}
+                        </div>
+                      </article>
+                    )
+                  })}
+                  {tableItems.length === 0 && (
+                    <div className="empty-notice-box">
+                      <p>Aún no has creado mesas para la boda. Puedes agregarlas en la pestaña <strong>Contenido</strong> &gt; <strong>Mesas</strong>.</p>
+                      <button type="button" className="secondary-button" onClick={() => setActiveTab('content')}>
+                        Crear mesas
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* VISTA 3: CONTROL POR GRUPOS FAMILIARES */}
+            {reportSubTab === 'groups' && (
+              <div className="report-view-groups">
+                <div className="group-search-bar-wrap">
+                  <div className="report-search-box" style={{ maxWidth: '420px', margin: '0 0 16px' }}>
+                    <IconSearch size={17} className="search-icon" />
+                    <input
+                      type="text"
+                      placeholder="Buscar grupo o miembro familiar..."
+                      value={groupSearch}
+                      onChange={(e) => setGroupSearch(e.target.value)}
+                    />
+                    {groupSearch && (
+                      <button type="button" className="clear-search-btn" onClick={() => setGroupSearch('')}>✕</button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="table-responsive report-table-scroll">
+                  <table className="report-data-table sortable-table">
+                    <thead>
+                      <tr>
+                        <th style={{ width: '40px', textAlign: 'center' }}>#</th>
+                        <th
+                          onClick={() => handleGroupSort('contactName')}
+                          className={`sortable-th ${groupSortColumn === 'contactName' ? 'active-sort' : ''}`}
+                          title="Ordenar por titular o grupo"
+                        >
+                          <div className="th-content">
+                            <span>Grupo Familiar / Contacto</span>
+                            {groupSortColumn === 'contactName' ? (
+                              groupSortDirection === 'asc' ? <IconSortAsc /> : <IconSortDesc />
+                            ) : (
+                              <IconSortDefault />
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          style={{ width: '130px', textAlign: 'center' }}
+                          onClick={() => handleGroupSort('maxGuestsAllowed')}
+                          className={`sortable-th ${groupSortColumn === 'maxGuestsAllowed' ? 'active-sort' : ''}`}
+                          title="Ordenar por pases asignados"
+                        >
+                          <div className="th-content center-th">
+                            <span>Pases</span>
+                            {groupSortColumn === 'maxGuestsAllowed' ? (
+                              groupSortDirection === 'asc' ? <IconSortAsc /> : <IconSortDesc />
+                            ) : (
+                              <IconSortDefault />
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          style={{ width: '130px', textAlign: 'center' }}
+                          onClick={() => handleGroupSort('confirmedGuests')}
+                          className={`sortable-th ${groupSortColumn === 'confirmedGuests' ? 'active-sort' : ''}`}
+                          title="Ordenar por pases confirmados"
+                        >
+                          <div className="th-content center-th">
+                            <span>Confirmados</span>
+                            {groupSortColumn === 'confirmedGuests' ? (
+                              groupSortDirection === 'asc' ? <IconSortAsc /> : <IconSortDesc />
+                            ) : (
+                              <IconSortDefault />
+                            )}
+                          </div>
+                        </th>
+                        <th
+                          style={{ width: '130px' }}
+                          onClick={() => handleGroupSort('status')}
+                          className={`sortable-th ${groupSortColumn === 'status' ? 'active-sort' : ''}`}
+                          title="Ordenar por estado"
+                        >
+                          <div className="th-content">
+                            <span>Estado</span>
+                            {groupSortColumn === 'status' ? (
+                              groupSortDirection === 'asc' ? <IconSortAsc /> : <IconSortDesc />
+                            ) : (
+                              <IconSortDefault />
+                            )}
+                          </div>
+                        </th>
+                        <th>Invitados Registrados</th>
+                        <th style={{ width: '150px', textAlign: 'center' }} className="no-print">Enlace RSVP</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedGroups.map((group, idx) => (
+                        <tr key={group.id}>
+                          <td style={{ color: '#888', fontSize: '0.82rem', textAlign: 'center' }}>{idx + 1}</td>
+                          <td>
+                            <strong>{group.contactName}</strong>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span className="badge-pass-count">{group.maxGuestsAllowed}</span>
+                          </td>
+                          <td style={{ textAlign: 'center' }}>
+                            <span className="badge-pass-confirmed">{group.confirmedGuests || 0}</span>
+                          </td>
+                          <td>
+                            {group.status === 'CONFIRMED' && <span className="report-status-badge badge-green">Confirmado</span>}
+                            {group.status === 'PENDING' && <span className="report-status-badge badge-amber">Pendiente</span>}
+                            {group.status === 'DECLINED' && <span className="report-status-badge badge-gray">No asiste</span>}
+                          </td>
+                          <td>
+                            {group.guests && group.guests.length > 0 ? (
+                              <div className="group-members-list">
+                                {group.guests.map((g) => (
+                                  <span key={g.id} className={`member-tag ${g.attendanceStatus === 'CONFIRMED' ? 'tag-attending' : 'tag-declined'}`}>
+                                    {g.fullName} {g.attendanceStatus === 'CONFIRMED' ? '✓' : '✗'}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span style={{ color: '#999', fontSize: '0.85rem' }}>Sin nombres detallados aún</span>
+                            )}
+                          </td>
+                          <td className="no-print" style={{ textAlign: 'center' }}>
+                            <button
+                              type="button"
+                              className="link-copy-btn"
+                              onClick={() => copyRsvpLink(group.accessToken)}
+                              title="Copiar enlace de invitación para enviar por WhatsApp"
+                            >
+                              <IconCopy size={13} />
+                              <span>{copiedLinkToken === group.accessToken ? 'Copiado' : 'Copiar RSVP'}</span>
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                      {sortedGroups.length === 0 && (
+                        <tr>
+                          <td colSpan="7" style={{ textAlign: 'center', padding: '36px 12px', color: '#777' }}>
+                            No se encontraron grupos familiares con los criterios especificados.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
+        {activeTab === 'summary' && (
+          <section className="summary-section">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
+              <div>
+                <h2 style={{ margin: 0 }}>Resumen general</h2>
+                <p style={{ margin: '4px 0 0', color: '#666', fontSize: '0.92rem' }}>
+                  Gestiona el contenido de <strong>{contentForm.title || weddings.find((wedding) => String(wedding.id) === String(weddingId))?.title}</strong> desde las pestañas del panel.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="primary-button"
+                onClick={() => setActiveTab('reports')}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+              >
+                <IconDoorCheck size={16} />
+                <span>Abrir Reportes de Gestión</span>
+              </button>
+            </div>
+            <div className="summary-metrics">
+              <article><strong>{contentForm.maxRegisteredGuests || 0}</strong><span>Pases máximos</span></article>
+              <article><strong>{groups.reduce((total, group) => total + (group.confirmedGuests || 0), 0)}</strong><span>Personas confirmadas</span></article>
+              <article><strong>{groups.reduce((total, group) => total + (group.registeredGuests || 0), 0)}</strong><span>Personas registradas</span></article>
+              <article><strong>{groups.length}</strong><span>Grupos familiares</span></article>
+              <article><strong>{photos.length}</strong><span>Fotos publicadas</span></article>
+              <article><strong>{contentForm.maxRegisteredGuests ? Math.round((groups.reduce((total, group) => total + (group.confirmedGuests || 0), 0) / contentForm.maxRegisteredGuests) * 100) : 0}%</strong><span>Personas confirmadas del máximo</span></article>
+            </div>
+            <p className="summary-note">Fecha del evento: <strong>{contentForm.weddingDate || 'Por confirmar'}</strong></p>
+          </section>
+        )}
       </section>
     </main>
   )

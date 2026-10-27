@@ -67,12 +67,21 @@ public class GuestGroupService {
     private GuestGroupResponse toResponse(GuestGroup guestGroup) {
         List<GuestResponse> guests = guestRepository.findByGuestGroupId(guestGroup.getId())
                 .stream()
-                .map(guest -> new GuestResponse(guest.getId(), guest.getFullName(), guest.getAgeGroup(), guest.getMenuOption(), guest.getAllergies(), guest.getAttendanceStatus()))
+                .map(guest -> new GuestResponse(
+                        guest.getId(),
+                        guest.getFullName(),
+                        guest.getAgeGroup(),
+                        guest.getMenuOption(),
+                        guest.getAllergies(),
+                        guest.getAttendanceStatus(),
+                        guest.getCheckedIn(),
+                        guest.getCheckedInAt()
+                ))
                 .toList();
         int confirmedGuests = (int) guests.stream()
                 .filter(guest -> "CONFIRMED".equals(guest.getAttendanceStatus()))
                 .count();
-        return new GuestGroupResponse(
+        GuestGroupResponse response = new GuestGroupResponse(
                 guestGroup.getId(),
                 guestGroup.getWedding().getId(),
                 guestGroup.getContactName(),
@@ -85,5 +94,27 @@ public class GuestGroupService {
                 confirmedGuests,
                 guests
         );
+        response.setCheckedIn(guestGroup.getCheckedIn());
+        return response;
+    }
+
+    public void toggleCheckIn(Long weddingId, Long guestId, Long groupId, Boolean checkedIn, String email) {
+        verifyOwner(weddingId, email);
+        boolean target = checkedIn != null ? checkedIn : true;
+        java.time.LocalDateTime now = target ? java.time.LocalDateTime.now() : null;
+
+        if (guestId != null) {
+            com.boda.planner.model.Guest guest = guestRepository.findById(guestId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Invitado no encontrado"));
+            guest.setCheckedIn(target);
+            guest.setCheckedInAt(now);
+            guestRepository.save(guest);
+        } else if (groupId != null) {
+            GuestGroup group = guestGroupRepository.findById(groupId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Grupo familiar no encontrado"));
+            group.setCheckedIn(target);
+            group.setCheckedInAt(now);
+            guestGroupRepository.save(group);
+        }
     }
 }

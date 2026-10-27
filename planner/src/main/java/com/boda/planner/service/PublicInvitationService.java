@@ -46,6 +46,7 @@ public class PublicInvitationService {
         resp.setGodmotherName(wedding.getGodmotherName());
         resp.setWelcomeCitation(wedding.getWelcomeCitation());
         resp.setCustomLogoUrl(wedding.getCustomLogoUrl());
+        resp.setLateralColor(wedding.getLateralColor() != null ? wedding.getLateralColor() : "#e8efe9");
         return resp;
     }
 

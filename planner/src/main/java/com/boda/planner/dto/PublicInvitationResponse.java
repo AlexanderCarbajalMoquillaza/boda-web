@@ -36,6 +36,7 @@ public class PublicInvitationResponse {
     private String primaryColor;
     private String accentColor;
     private String backgroundColor;
+    private String lateralColor;
     private String templateId;
     private String brideFatherName;
     private String brideMotherName;
@@ -166,6 +167,8 @@ public class PublicInvitationResponse {
     public String getPrimaryColor() { return primaryColor; }
     public String getAccentColor() { return accentColor; }
     public String getBackgroundColor() { return backgroundColor; }
+    public String getLateralColor() { return lateralColor; }
+    public void setLateralColor(String value) { this.lateralColor = value; }
     public String getTemplateId() { return templateId; }
     public Boolean getShowDressCodePalette() { return showDressCodePalette; }
     public String getDressCodeColorsJson() { return dressCodeColorsJson; }

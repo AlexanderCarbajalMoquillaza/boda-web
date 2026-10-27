@@ -250,6 +250,7 @@ function PersonalizedInvitationPage() {
         '--primary-color': invitation.primaryColor || '#7fb3a8',
         '--accent-color': invitation.accentColor || '#b79a62',
         '--invitation-background': invitation.backgroundColor || '#f4f1ea',
+        '--invitation-lateral': invitation.lateralColor || invitation.backgroundColor || '#e8efe9',
       }}
     >
       {templateId === 'EDITORIAL_CARDS' && <EditorialCardsTemplate {...templateProps} />}
@@ -259,7 +260,7 @@ function PersonalizedInvitationPage() {
         <FloralRomanceTemplate {...templateProps} />
       )}
 
-      {/* SECCIÓN OFICIAL DE PASE DE ACCESO / ENTRADA VIP PARA IMPRESIÓN Y DESCARGA PDF */}
+      {/* SECCIÓN OFICIAL DE PASE DE ACCESO PARA IMPRESIÓN Y DESCARGA PDF */}
       <section className="print-access-pass" aria-label="Pase Oficial de Acceso">
         <div className="pass-card-sheet">
           <div className="pass-card-corner tl" />
@@ -268,7 +269,7 @@ function PersonalizedInvitationPage() {
           <div className="pass-card-corner br" />
 
           <div className="pass-card-header">
-            <span className="pass-badge-pill">PASE DE ACCESO VIP</span>
+            <span className="pass-badge-pill">PASE DE ACCESO</span>
             <p className="pass-card-nuestra-boda">NUESTRA BODA</p>
             <h1 className="pass-card-couple">
               {invitation.partnerOneName} &amp; {invitation.partnerTwoName}
@@ -280,7 +281,7 @@ function PersonalizedInvitationPage() {
 
           <div className="pass-card-guest-info">
             <div className="pass-info-row">
-              <span className="pass-label">FAMILIA / INVITADO DE HONOR:</span>
+              <span className="pass-label">FAMILIA / INVITADO:</span>
               <strong className="pass-value-highlight">{rsvp?.contactName || 'Invitado Especial'}</strong>
             </div>
             <div className="pass-info-row">

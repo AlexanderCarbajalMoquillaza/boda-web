@@ -31,6 +31,12 @@ public class Guest {
     @Column(name = "attendance_status", nullable = false, length = 30)
     private String attendanceStatus = "PENDING";
 
+    @Column(name = "checked_in", nullable = false)
+    private Boolean checkedIn = false;
+
+    @Column(name = "checked_in_at")
+    private LocalDateTime checkedInAt;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -98,5 +104,21 @@ public class Guest {
 
     public void setAttendanceStatus(String attendanceStatus) {
         this.attendanceStatus = attendanceStatus;
+    }
+
+    public Boolean getCheckedIn() {
+        return checkedIn != null ? checkedIn : false;
+    }
+
+    public void setCheckedIn(Boolean checkedIn) {
+        this.checkedIn = checkedIn;
+    }
+
+    public LocalDateTime getCheckedInAt() {
+        return checkedInAt;
+    }
+
+    public void setCheckedInAt(LocalDateTime checkedInAt) {
+        this.checkedInAt = checkedInAt;
     }
 }

@@ -16,6 +16,7 @@ public class GuestGroupResponse {
     private Integer registeredGuests;
     private Integer confirmedGuests;
     private List<GuestResponse> guests;
+    private Boolean checkedIn = false;
 
     public GuestGroupResponse(
             Long id,
@@ -78,4 +79,6 @@ public class GuestGroupResponse {
     public Integer getRegisteredGuests() { return registeredGuests; }
     public Integer getConfirmedGuests() { return confirmedGuests; }
     public List<GuestResponse> getGuests() { return guests; }
+    public Boolean getCheckedIn() { return checkedIn != null ? checkedIn : false; }
+    public void setCheckedIn(Boolean checkedIn) { this.checkedIn = checkedIn; }
 }

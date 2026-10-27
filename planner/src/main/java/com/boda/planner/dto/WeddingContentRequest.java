@@ -37,6 +37,7 @@ public class WeddingContentRequest {
     private String primaryColor = "#7fb3a8";
     private String accentColor = "#b79a62";
     private String backgroundColor = "#f4f1ea";
+    private String lateralColor = "#e8efe9";
     private String templateId = "FLORAL_ROMANCE";
     private String brideFatherName;
     private String brideMotherName;
@@ -111,6 +112,8 @@ public class WeddingContentRequest {
     public void setAccentColor(String value) { this.accentColor = value; }
     public String getBackgroundColor() { return backgroundColor; }
     public void setBackgroundColor(String value) { this.backgroundColor = value; }
+    public String getLateralColor() { return lateralColor; }
+    public void setLateralColor(String value) { this.lateralColor = value; }
     public String getTemplateId() { return templateId; }
     public void setTemplateId(String value) { this.templateId = value; }
 

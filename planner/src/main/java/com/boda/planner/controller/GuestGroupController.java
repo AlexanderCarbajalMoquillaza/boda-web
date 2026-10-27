@@ -32,4 +32,13 @@ public class GuestGroupController {
     ) {
         return guestGroupService.create(weddingId, request, authentication.getName());
     }
+
+    @PostMapping("/checkin/toggle")
+    public void toggleCheckIn(
+            @PathVariable Long weddingId,
+            @RequestBody com.boda.planner.dto.ToggleCheckInRequest request,
+            Authentication authentication
+    ) {
+        guestGroupService.toggleCheckIn(weddingId, request.getGuestId(), request.getGroupId(), request.getCheckedIn(), authentication.getName());
+    }
 }
