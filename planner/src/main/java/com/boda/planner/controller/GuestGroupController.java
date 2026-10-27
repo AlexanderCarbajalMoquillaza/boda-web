@@ -33,6 +33,26 @@ public class GuestGroupController {
         return guestGroupService.create(weddingId, request, authentication.getName());
     }
 
+    @PutMapping("/{groupId}")
+    public GuestGroupResponse update(
+            @PathVariable Long weddingId,
+            @PathVariable Long groupId,
+            @Valid @RequestBody GuestGroupRequest request,
+            Authentication authentication
+    ) {
+        return guestGroupService.update(weddingId, groupId, request, authentication.getName());
+    }
+
+    @DeleteMapping("/{groupId}")
+    public java.util.Map<String, String> delete(
+            @PathVariable Long weddingId,
+            @PathVariable Long groupId,
+            Authentication authentication
+    ) {
+        guestGroupService.delete(weddingId, groupId, authentication.getName());
+        return java.util.Map.of("message", "Grupo familiar eliminado correctamente");
+    }
+
     @PostMapping("/checkin/toggle")
     public void toggleCheckIn(
             @PathVariable Long weddingId,

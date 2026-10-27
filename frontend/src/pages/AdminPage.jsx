@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { createAdminUser, createGuestGroup, createWedding, deleteAdminUser, deleteWeddingAudio, deleteWeddingPhoto, getAdminOverview, getGuestGroups, getImageUrl, getManagedPhotos, getMyWeddings, getPublicAudio, getWeddingContent, login, updateWeddingContent, uploadWeddingAudio, uploadWeddingDressCodeImage, uploadWeddingPhoto, uploadWeddingLogo, toggleCheckInAdmin } from '../services/api'
+import { createAdminUser, createGuestGroup, updateGuestGroup, deleteGuestGroup, createWedding, deleteAdminUser, deleteWeddingAudio, deleteWeddingPhoto, getAdminOverview, getGuestGroups, getImageUrl, getManagedPhotos, getMyWeddings, getPublicAudio, getWeddingContent, login, updateWeddingContent, uploadWeddingAudio, uploadWeddingDressCodeImage, uploadWeddingPhoto, uploadWeddingLogo, toggleCheckInAdmin } from '../services/api'
 import {
   IconCheckCircle,
   IconClock,
@@ -20,6 +20,8 @@ import {
   IconSortDefault,
   IconAlertTriangle,
   IconCheck,
+  IconEdit,
+  IconTrash,
 } from '../components/ReportIcons'
 
 const photoSections = [
@@ -204,7 +206,9 @@ function AdminPage() {
   const [section, setSection] = useState('GALLERY')
   const [photos, setPhotos] = useState([])
   const [groups, setGroups] = useState([])
-  const [groupForm, setGroupForm] = useState({ contactName: '', maxGuestsAllowed: 1 })
+  const [groupForm, setGroupForm] = useState({ contactName: '', maxGuestsAllowed: 1, contactEmail: '', contactPhone: '' })
+  const [editingGroup, setEditingGroup] = useState(null)
+  const [editGroupForm, setEditGroupForm] = useState({ contactName: '', maxGuestsAllowed: 1, contactEmail: '', contactPhone: '' })
   const [contentForm, setContentForm] = useState(emptyContent)
   const [scheduleItems, setScheduleItems] = useState([])
   const [faqItems, setFaqItems] = useState([])
@@ -459,10 +463,54 @@ function AdminPage() {
     try {
       const group = await createGuestGroup(weddingId, groupForm, token)
       setGroups((current) => [...current, group])
-      setGroupForm({ contactName: '', maxGuestsAllowed: 1 })
+      setGroupForm({ contactName: '', maxGuestsAllowed: 1, contactEmail: '', contactPhone: '' })
       setMessage('Grupo familiar creado correctamente.')
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'No se pudo crear el grupo familiar.')
+    }
+  }
+
+  function handleStartEditGroup(group) {
+    setEditingGroup(group)
+    setEditGroupForm({
+      contactName: group.contactName || '',
+      maxGuestsAllowed: group.maxGuestsAllowed || 1,
+      contactEmail: group.contactEmail || '',
+      contactPhone: group.contactPhone || '',
+    })
+  }
+
+  async function handleUpdateGroup(event) {
+    event.preventDefault()
+    if (!editingGroup) return
+    try {
+      const updated = await updateGuestGroup(weddingId, editingGroup.id, editGroupForm, token)
+      setGroups((current) => current.map((g) => (g.id === editingGroup.id ? { ...g, ...updated } : g)))
+      setEditingGroup(null)
+      setMessage(`Grupo "${editGroupForm.contactName}" actualizado correctamente.`)
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'No se pudo actualizar el grupo familiar.')
+    }
+  }
+
+  async function handleDeleteGroup(group) {
+    if (!window.confirm(`¿Estás seguro de que deseas eliminar al grupo familiar "${group.contactName}"? Se eliminarán también sus pases e invitados asociados.`)) {
+      return
+    }
+    try {
+      await deleteGuestGroup(weddingId, group.id, token)
+      setGroups((current) => current.filter((g) => g.id !== group.id))
+      // Limpiar referencias en mesas si existían
+      const deletedGuestIds = (group.guests || []).map((g) => String(g.id))
+      if (deletedGuestIds.length > 0) {
+        setTableItems((curr) => curr.map((t) => ({
+          ...t,
+          guestIds: (t.guestIds || []).filter((id) => !deletedGuestIds.includes(String(id)))
+        })))
+      }
+      setMessage(`Grupo familiar "${group.contactName}" eliminado.`)
+    } catch (requestError) {
+      setError(requestError.response?.data?.message || 'No se pudo eliminar el grupo familiar.')
     }
   }
 
@@ -759,7 +807,7 @@ function AdminPage() {
   const checkedInGuestsOnly = allReportGuests.filter((g) => g.checkedIn)
 
   const totalTableCapacity = tableItems.reduce((acc, t) => acc + (Number(t.capacity) || 0), 0)
-  const totalTableAssignedCount = tableItems.reduce((acc, t) => acc + (Array.isArray(t.guestIds) ? t.guestIds.length : 0), 0)
+  const totalTableAssignedCount = seatedConfirmed.length
 
   function handleColumnSort(colKey) {
     if (sortColumn === colKey) {
@@ -1355,14 +1403,109 @@ function AdminPage() {
         )}
 
         {activeTab === 'groups' && <section><h2>Grupos familiares</h2>
+        {editingGroup && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px' }}>
+            <div style={{ background: '#ffffff', borderRadius: '12px', padding: '24px', maxWidth: '480px', width: '100%', boxShadow: '0 20px 40px rgba(0,0,0,0.2)' }}>
+              <h3 style={{ margin: '0 0 16px 0', fontSize: '1.25rem', color: '#1e293b' }}>Editar Grupo Familiar</h3>
+              <form onSubmit={handleUpdateGroup} style={{ display: 'grid', gap: '14px' }}>
+                <label style={{ display: 'grid', gap: '4px', fontSize: '0.9rem', fontWeight: 600, color: '#334155' }}>
+                  Nombre del grupo / Contacto
+                  <input
+                    type="text"
+                    value={editGroupForm.contactName}
+                    onChange={(e) => setEditGroupForm({ ...editGroupForm, contactName: e.target.value })}
+                    required
+                    style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                  />
+                </label>
+                <label style={{ display: 'grid', gap: '4px', fontSize: '0.9rem', fontWeight: 600, color: '#334155' }}>
+                  Pases disponibles
+                  <input
+                    type="number"
+                    min="1"
+                    value={editGroupForm.maxGuestsAllowed}
+                    onChange={(e) => setEditGroupForm({ ...editGroupForm, maxGuestsAllowed: Number(e.target.value) })}
+                    required
+                    style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                  />
+                </label>
+                <label style={{ display: 'grid', gap: '4px', fontSize: '0.9rem', fontWeight: 600, color: '#334155' }}>
+                  Teléfono de contacto (opcional)
+                  <input
+                    type="text"
+                    value={editGroupForm.contactPhone || ''}
+                    onChange={(e) => setEditGroupForm({ ...editGroupForm, contactPhone: e.target.value })}
+                    placeholder="+51 999 999 999"
+                    style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                  />
+                </label>
+                <label style={{ display: 'grid', gap: '4px', fontSize: '0.9rem', fontWeight: 600, color: '#334155' }}>
+                  Correo electrónico (opcional)
+                  <input
+                    type="email"
+                    value={editGroupForm.contactEmail || ''}
+                    onChange={(e) => setEditGroupForm({ ...editGroupForm, contactEmail: e.target.value })}
+                    placeholder="contacto@correo.com"
+                    style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                  />
+                </label>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '12px' }}>
+                  <button type="button" className="secondary-button" onClick={() => setEditingGroup(null)}>
+                    Cancelar
+                  </button>
+                  <button type="submit" className="primary-button">
+                    Guardar Cambios
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
         <form className="group-form" onSubmit={handleCreateGroup}>
           <label>Nombre del grupo<input value={groupForm.contactName} onChange={(event) => setGroupForm({ ...groupForm, contactName: event.target.value })} required placeholder="Familia Silva" /></label>
           <label>Pases disponibles<input type="number" min="1" value={groupForm.maxGuestsAllowed} onChange={(event) => setGroupForm({ ...groupForm, maxGuestsAllowed: Number(event.target.value) })} required /></label>
+          <label>Teléfono (opcional)<input value={groupForm.contactPhone || ''} onChange={(event) => setGroupForm({ ...groupForm, contactPhone: event.target.value })} placeholder="+51 999 999 999" /></label>
+          <label>Correo (opcional)<input type="email" value={groupForm.contactEmail || ''} onChange={(event) => setGroupForm({ ...groupForm, contactEmail: event.target.value })} placeholder="contacto@correo.com" /></label>
           <button className="primary-button" type="submit">Crear grupo familiar</button>
         </form>
         <div className="group-list">
           {groups.map((group) => <article className="group-card" key={group.id}>
-            <strong>{group.contactName}</strong>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
+              <div>
+                <strong style={{ fontSize: '1.05rem', color: '#1e293b' }}>{group.contactName}</strong>
+                {group.contactPhone && <small style={{ display: 'block', color: '#64748b' }}>📱 {group.contactPhone}</small>}
+                {group.contactEmail && <small style={{ display: 'block', color: '#64748b' }}>✉️ {group.contactEmail}</small>}
+              </div>
+              <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  className="link-copy-btn"
+                  onClick={() => copyRsvpLink(group.accessToken)}
+                  title="Copiar enlace RSVP"
+                >
+                  <IconCopy size={13} />
+                  <span>{copiedLinkToken === group.accessToken ? 'Copiado' : 'Link'}</span>
+                </button>
+                <button
+                  type="button"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', color: '#334155' }}
+                  onClick={() => handleStartEditGroup(group)}
+                  title="Editar este grupo"
+                >
+                  <IconEdit size={13} />
+                  <span>Editar</span>
+                </button>
+                <button
+                  type="button"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 10px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer', color: '#b91c1c' }}
+                  onClick={() => handleDeleteGroup(group)}
+                  title="Eliminar este grupo"
+                >
+                  <IconTrash size={13} />
+                  <span>Eliminar</span>
+                </button>
+              </div>
+            </div>
             <span>{group.confirmedGuests} confirmados de {group.maxGuestsAllowed} pases · {group.registeredGuests} registrados · {group.status}</span>
             <small>Enlace personalizado: /invitacion/{weddings.find((wedding) => String(wedding.id) === String(weddingId))?.invitationSlug}/rsvp/{group.accessToken}</small>
             {group.message && (
@@ -1371,7 +1514,7 @@ function AdminPage() {
                 <span style={{ fontStyle: 'italic' }}>&ldquo;{group.message}&rdquo;</span>
               </div>
             )}
-            {group.guests?.length > 0 && <details><summary>Ver invitados</summary>{group.guests.map((guest) => <div className="guest-row" key={guest.id}><span>{guest.fullName}</span><small>{guest.attendanceStatus === 'CONFIRMED' ? 'Asiste' : 'No asiste'}</small></div>)}</details>}
+            {group.guests?.length > 0 && <details><summary>Ver invitados ({group.guests.length})</summary>{group.guests.map((guest) => <div className="guest-row" key={guest.id}><span>{guest.fullName}</span><small>{guest.attendanceStatus === 'CONFIRMED' ? 'Asiste' : 'No asiste'}{guest.menuOption ? ` · Menú: ${guest.menuOption}` : ''}{guest.allergies ? ` · Alergias: ${guest.allergies}` : ''}</small></div>)}</details>}
           </article>)}
         </div></section>}
 

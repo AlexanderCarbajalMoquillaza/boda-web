@@ -23,8 +23,14 @@ public class EmailService {
 
     private final ObjectProvider<JavaMailSender> mailSenderProvider;
 
+    @Value("${spring.mail.host:}")
+    private String mailHost;
+
     @Value("${spring.mail.username:}")
-    private String fromEmail;
+    private String mailUsername;
+
+    @Value("${spring.mail.password:}")
+    private String mailPassword;
 
     public EmailService(ObjectProvider<JavaMailSender> mailSenderProvider) {
         this.mailSenderProvider = mailSenderProvider;
@@ -46,8 +52,8 @@ public class EmailService {
 
     private void sendRsvpNotification(Wedding wedding, GuestGroup group, List<Guest> guests) {
         JavaMailSender mailSender = mailSenderProvider.getIfAvailable();
-        if (mailSender == null) {
-            log.info("Envío de correos omitido: JavaMailSender no está configurado (falta SPRING_MAIL_HOST).");
+        if (mailSender == null || mailHost == null || mailHost.isBlank() || mailUsername == null || mailUsername.isBlank() || mailPassword == null || mailPassword.isBlank()) {
+            log.info("Envío de correos omitido: faltan configurar variables SMTP (SPRING_MAIL_HOST, SPRING_MAIL_USERNAME o SPRING_MAIL_PASSWORD).");
             return;
         }
 
@@ -87,7 +93,7 @@ public class EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            String sender = (fromEmail != null && !fromEmail.isBlank()) ? fromEmail : "notificaciones@bodas.app";
+            String sender = (mailUsername != null && !mailUsername.isBlank()) ? mailUsername : "notificaciones@bodas.app";
             helper.setFrom(sender, "Boda " + coupleNames);
             helper.setTo(recipients);
             helper.setSubject(subject);
@@ -96,7 +102,11 @@ public class EmailService {
             mailSender.send(message);
             log.info("Alerta de confirmación enviada con éxito a: {}", Arrays.toString(recipients));
         } catch (Exception e) {
-            log.error("Error al despachar el correo de confirmación: {}", e.getMessage(), e);
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("authentication failed")) {
+                log.error("Error de autenticación SMTP: Las credenciales fueron rechazadas. Si usas Gmail (smtp.gmail.com), recuerda usar una Contraseña de Aplicación de 16 caracteres generada en https://myaccount.google.com/apppasswords en SPRING_MAIL_PASSWORD, no tu contraseña normal de Google.");
+            } else {
+                log.error("Error al despachar el correo de confirmación: {}", e.getMessage(), e);
+            }
         }
     }
 

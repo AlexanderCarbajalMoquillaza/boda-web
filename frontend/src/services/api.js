@@ -167,6 +167,20 @@ export async function createGuestGroup(weddingId, data, token) {
   return response.data
 }
 
+export async function updateGuestGroup(weddingId, groupId, data, token) {
+  const response = await api.put(`/weddings/${weddingId}/guest-groups/${groupId}`, data, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return response.data
+}
+
+export async function deleteGuestGroup(weddingId, groupId, token) {
+  const response = await api.delete(`/weddings/${weddingId}/guest-groups/${groupId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  })
+  return response.data
+}
+
 export async function submitRsvp(slug, token, payload) {
   const response = await api.post(`/public/rsvp/${slug}/${token}`, payload)
   return response.data

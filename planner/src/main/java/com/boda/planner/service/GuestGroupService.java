@@ -52,6 +52,34 @@ public class GuestGroupService {
         return toResponse(savedGuestGroup);
     }
 
+    @org.springframework.transaction.annotation.Transactional
+    public GuestGroupResponse update(Long weddingId, Long groupId, GuestGroupRequest request, String email) {
+        verifyOwner(weddingId, email);
+        GuestGroup guestGroup = guestGroupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Grupo familiar no encontrado"));
+        if (!guestGroup.getWedding().getId().equals(weddingId)) {
+            throw new org.springframework.security.access.AccessDeniedException("El grupo no pertenece a esta boda");
+        }
+        guestGroup.setContactName(request.getContactName());
+        guestGroup.setContactEmail(request.getContactEmail());
+        guestGroup.setContactPhone(request.getContactPhone());
+        guestGroup.setMaxGuestsAllowed(request.getMaxGuestsAllowed());
+        return toResponse(guestGroupRepository.save(guestGroup));
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void delete(Long weddingId, Long groupId, String email) {
+        verifyOwner(weddingId, email);
+        GuestGroup guestGroup = guestGroupRepository.findById(groupId)
+                .orElseThrow(() -> new ResourceNotFoundException("Grupo familiar no encontrado"));
+        if (!guestGroup.getWedding().getId().equals(weddingId)) {
+            throw new org.springframework.security.access.AccessDeniedException("El grupo no pertenece a esta boda");
+        }
+        List<Guest> guests = guestRepository.findByGuestGroupId(groupId);
+        guestRepository.deleteAll(guests);
+        guestGroupRepository.delete(guestGroup);
+    }
+
     private void verifyOwner(Long weddingId, String email) {
         Wedding wedding = weddingRepository.findById(weddingId)
                 .orElseThrow(() -> new ResourceNotFoundException("Boda no encontrada"));
