@@ -59,6 +59,7 @@ public class WeddingService {
         wedding.setVenueAddress(request.getVenueAddress());
         wedding.setInvitationSlug(generateUniqueInvitationSlug(request));
         wedding.setMaxRegisteredGuests(request.getMaxRegisteredGuests());
+        wedding.setDoorAccessKey(java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16));
 
         Wedding savedWedding = weddingRepository.save(wedding);
 
@@ -67,6 +68,10 @@ public class WeddingService {
 
     public WeddingContentResponse getContent(Long weddingId, String email) {
         Wedding wedding = owned(weddingId, email);
+        if (wedding.getDoorAccessKey() == null || wedding.getDoorAccessKey().isBlank()) {
+            wedding.setDoorAccessKey(java.util.UUID.randomUUID().toString().replace("-", "").substring(0, 16));
+            wedding = weddingRepository.save(wedding);
+        }
         return toContentResponse(wedding);
     }
 

@@ -40,7 +40,7 @@ public class DoorAccessController {
         Wedding wedding = weddingRepository.findByInvitationSlug(slug)
                 .orElseThrow(() -> new ResourceNotFoundException("Boda no encontrada con el enlace especificado"));
         String expectedKey = wedding.getDoorAccessKey();
-        if (expectedKey == null || !expectedKey.equalsIgnoreCase(doorKey)) {
+        if (expectedKey == null || doorKey == null || !expectedKey.trim().equalsIgnoreCase(doorKey.trim())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Acceso no autorizado al control de ingreso");
         }
         return wedding;
