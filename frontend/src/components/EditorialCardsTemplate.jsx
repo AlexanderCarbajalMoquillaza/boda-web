@@ -4,6 +4,8 @@ import { WeddingMusicPlayer } from './WeddingMusicPlayer'
 import { ActivityIcon } from './ActivityIcon'
 
 const seaGlassTopLeft = '/illustrations/seaglass-corner-top-left.png'
+const seaGlassTopRight = '/illustrations/seaglass-corner-top-right.png'
+const seaGlassBottomLeft = '/illustrations/seaglass-corner-bottom-left.png'
 const seaGlassBottomRight = '/illustrations/seaglass-corner-bottom-right.png'
 const seaGlassDividerCluster = '/illustrations/seaglass-divider-cluster.png'
 const seaGlassBouquet = '/illustrations/seaglass-bouquet.png'
@@ -97,7 +99,7 @@ export function EditorialCardsTemplate({
       {/* 1. PANTALLA DE INICIO (Plantilla 2) */}
       {!isOpened && (
         <div className={`editorial-cover-screen ${isOpening ? 'is-opening' : ''}`}>
-          {/* Esquinas florales botánicas Sea Glass adaptables */}
+          {/* Esquinas florales botánicas Sea Glass perfectamente equilibradas en las 4 esquinas */}
           <img
             src={seaGlassTopLeft}
             alt=""
@@ -105,9 +107,27 @@ export function EditorialCardsTemplate({
             aria-hidden="true"
           />
           <img
+            src={seaGlassTopRight}
+            alt=""
+            className="editorial-corner-floral corner-tr"
+            aria-hidden="true"
+          />
+          <img
+            src={seaGlassBottomLeft}
+            alt=""
+            className="editorial-corner-floral corner-bl"
+            aria-hidden="true"
+          />
+          <img
             src={seaGlassBottomRight}
             alt=""
             className="editorial-corner-floral corner-br"
+            aria-hidden="true"
+          />
+          <img
+            src={seaGlassBouquet}
+            alt=""
+            className="cover-floral-image cover-floral-bottom"
             aria-hidden="true"
           />
 

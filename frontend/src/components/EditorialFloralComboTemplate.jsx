@@ -2,9 +2,12 @@ import React, { useState } from 'react'
 import { getImageUrl } from '../services/api'
 import { WeddingMusicPlayer } from './WeddingMusicPlayer'
 import { ActivityIcon } from './ActivityIcon'
+import { AnimatedWeddingEnvelope } from './AnimatedWeddingEnvelope'
 
 const coverReferenceImage = '/illustrations/cover-envelope-reference.png'
 const seaGlassTopLeft = '/illustrations/seaglass-corner-top-left.png'
+const seaGlassTopRight = '/illustrations/seaglass-corner-top-right.png'
+const seaGlassBottomLeft = '/illustrations/seaglass-corner-bottom-left.png'
 const seaGlassBottomRight = '/illustrations/seaglass-corner-bottom-right.png'
 const seaGlassDividerCluster = '/illustrations/seaglass-divider-cluster.png'
 const seaGlassBouquet = '/illustrations/seaglass-bouquet.png'
@@ -99,7 +102,7 @@ export function EditorialFloralComboTemplate({
       {/* 1. PORTADA DE INICIO HÍBRIDA (PLANTILLA 3): Sobre + Flores Sea Glass + Espaciado refinado */}
       {!isOpened && (
         <div className={`invitation-cover combo-cover ${isOpening ? 'is-opening' : ''}`}>
-          {/* Múltiples flores estáticas en paleta Sea Glass */}
+          {/* Esquinas florales botánicas Sea Glass perfectamente equilibradas en las 4 esquinas */}
           <img
             src={seaGlassTopLeft}
             alt=""
@@ -107,15 +110,21 @@ export function EditorialFloralComboTemplate({
             aria-hidden="true"
           />
           <img
-            src={seaGlassBottomRight}
+            src={seaGlassTopRight}
             alt=""
-            className="editorial-corner-floral corner-br"
+            className="editorial-corner-floral corner-tr"
             aria-hidden="true"
           />
           <img
-            src={seaGlassVertical}
+            src={seaGlassBottomLeft}
             alt=""
-            className="cover-floral-image cover-floral-vertical"
+            className="editorial-corner-floral corner-bl"
+            aria-hidden="true"
+          />
+          <img
+            src={seaGlassBottomRight}
+            alt=""
+            className="editorial-corner-floral corner-br"
             aria-hidden="true"
           />
           <img
@@ -139,27 +148,15 @@ export function EditorialFloralComboTemplate({
             <p className="cover-date">{formatDate(invitation.weddingDate)}</p>
 
             {/* Sobre interactivo con monograma */}
-            <button
-              className="envelope-visual"
-              type="button"
-              onClick={openInvitation}
-              disabled={isOpening}
-              aria-label="Abrir invitación"
-            >
-              <span className="envelope-image-wrap">
-                <img
-                  className="envelope-reference-image"
-                  src={coverReferenceImage}
-                  alt="Sobre de la invitación"
-                />
-                <span className="envelope-initials" aria-hidden="true">
-                  {envelopeMonogram}
-                </span>
-              </span>
-              <span className="envelope-open-label">
-                {isOpening ? 'Abriendo invitación...' : 'Dar click para abrir'}
-              </span>
-            </button>
+            <AnimatedWeddingEnvelope
+              isOpening={isOpening}
+              onOpen={openInvitation}
+              partnerOneName={invitation.partnerOneName}
+              partnerTwoName={invitation.partnerTwoName}
+              weddingDate={invitation.weddingDate}
+              envelopeMonogram={envelopeMonogram}
+              formatDate={formatDate}
+            />
 
             {/* Nombre de la familia invitada posicionado un poco más abajo */}
             {rsvp && (

@@ -2,9 +2,12 @@ import React from 'react'
 import { getImageUrl } from '../services/api'
 import { WeddingMusicPlayer } from './WeddingMusicPlayer'
 import { ActivityIcon } from './ActivityIcon'
+import { AnimatedWeddingEnvelope } from './AnimatedWeddingEnvelope'
 
 const coverReferenceImage = '/illustrations/cover-envelope-reference.png'
 const seaGlassTopLeft = '/illustrations/seaglass-corner-top-left.png'
+const seaGlassTopRight = '/illustrations/seaglass-corner-top-right.png'
+const seaGlassBottomLeft = '/illustrations/seaglass-corner-bottom-left.png'
 const seaGlassBottomRight = '/illustrations/seaglass-corner-bottom-right.png'
 const seaGlassDividerCluster = '/illustrations/seaglass-divider-cluster.png'
 const seaGlassBouquet = '/illustrations/seaglass-bouquet.png'
@@ -84,8 +87,9 @@ export function FloralRomanceTemplate({
       {!isOpened && (
         <div className={`invitation-cover ${isOpening ? 'is-opening' : ''}`}>
           <img className="cover-floral-image cover-floral-tl" src={seaGlassTopLeft} alt="" aria-hidden="true" />
+          <img className="cover-floral-image cover-floral-tr" src={seaGlassTopRight} alt="" aria-hidden="true" />
+          <img className="cover-floral-image cover-floral-bl" src={seaGlassBottomLeft} alt="" aria-hidden="true" />
           <img className="cover-floral-image cover-floral-br" src={seaGlassBottomRight} alt="" aria-hidden="true" />
-          <img className="cover-floral-image cover-floral-vertical" src={seaGlassVertical} alt="" aria-hidden="true" />
           <img className="cover-floral-image cover-floral-bottom" src={seaGlassBouquet} alt="" aria-hidden="true" />
 
           <div className="invitation-cover-content">
@@ -97,13 +101,15 @@ export function FloralRomanceTemplate({
             </h1>
             <p className="cover-date">{formatDate(invitation.weddingDate)}</p>
 
-            <button className="envelope-visual" type="button" onClick={openInvitation} disabled={isOpening} aria-label="Abrir invitación">
-              <span className="envelope-image-wrap">
-                <img className="envelope-reference-image" src={coverReferenceImage} alt="Sobre de la invitación" />
-                <span className="envelope-initials" aria-hidden="true">{envelopeMonogram}</span>
-              </span>
-              <span className="envelope-open-label">{isOpening ? 'Abriendo...' : 'Dar click para abrir'}</span>
-            </button>
+            <AnimatedWeddingEnvelope
+              isOpening={isOpening}
+              onOpen={openInvitation}
+              partnerOneName={invitation.partnerOneName}
+              partnerTwoName={invitation.partnerTwoName}
+              weddingDate={invitation.weddingDate}
+              envelopeMonogram={envelopeMonogram}
+              formatDate={formatDate}
+            />
 
             {rsvp && (
               <div className="cover-guest-family-lower">

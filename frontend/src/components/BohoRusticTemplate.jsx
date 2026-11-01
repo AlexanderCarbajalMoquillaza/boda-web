@@ -2,9 +2,12 @@ import React, { useState } from 'react'
 import { getImageUrl } from '../services/api'
 import { WeddingMusicPlayer } from './WeddingMusicPlayer'
 import { ActivityIcon } from './ActivityIcon'
+import { AnimatedWeddingEnvelope } from './AnimatedWeddingEnvelope'
 
 const coverReferenceImage = '/illustrations/cover-envelope-reference.png'
 const seaGlassTopLeft = '/illustrations/seaglass-corner-top-left.png'
+const seaGlassTopRight = '/illustrations/seaglass-corner-top-right.png'
+const seaGlassBottomLeft = '/illustrations/seaglass-corner-bottom-left.png'
 const seaGlassBottomRight = '/illustrations/seaglass-corner-bottom-right.png'
 const seaGlassDividerCluster = '/illustrations/seaglass-divider-cluster.png'
 const seaGlassBouquet = '/illustrations/seaglass-bouquet.png'
@@ -105,10 +108,11 @@ export function BohoRusticTemplate({
       {/* 1. PORTADA DE INICIO CON PALETA SEA GLASS Y ESPACIADOS MEJORADOS */}
       {!isOpened && (
         <div className={`invitation-cover ${isOpening ? 'is-opening' : ''}`}>
-          {/* Múltiples flores estáticas en paleta Sea Glass para decorar ricamente la portada */}
+          {/* Esquinas florales botánicas Sea Glass en las 4 esquinas y flor central en el medio abajo */}
           <img className="cover-floral-image cover-floral-tl" src={seaGlassTopLeft} alt="" aria-hidden="true" />
+          <img className="cover-floral-image cover-floral-tr" src={seaGlassTopRight} alt="" aria-hidden="true" />
+          <img className="cover-floral-image cover-floral-bl" src={seaGlassBottomLeft} alt="" aria-hidden="true" />
           <img className="cover-floral-image cover-floral-br" src={seaGlassBottomRight} alt="" aria-hidden="true" />
-          <img className="cover-floral-image cover-floral-vertical" src={seaGlassVertical} alt="" aria-hidden="true" />
           <img className="cover-floral-image cover-floral-bottom" src={seaGlassBouquet} alt="" aria-hidden="true" />
 
           <div className="invitation-cover-content">
@@ -122,23 +126,15 @@ export function BohoRusticTemplate({
 
             <p className="cover-date">{formatDate(invitation.weddingDate)}</p>
 
-            <button
-              className="envelope-visual"
-              type="button"
-              onClick={openInvitation}
-              disabled={isOpening}
-              aria-label="Abrir invitación"
-            >
-              <span className="envelope-image-wrap">
-                <img
-                  className="envelope-reference-image"
-                  src={coverReferenceImage}
-                  alt="Sobre de la invitación"
-                />
-                <span className="envelope-initials" aria-hidden="true">{envelopeMonogram}</span>
-              </span>
-              <span className="envelope-open-label">{isOpening ? 'Abriendo...' : 'Dar click para abrir'}</span>
-            </button>
+            <AnimatedWeddingEnvelope
+              isOpening={isOpening}
+              onOpen={openInvitation}
+              partnerOneName={invitation.partnerOneName}
+              partnerTwoName={invitation.partnerTwoName}
+              weddingDate={invitation.weddingDate}
+              envelopeMonogram={envelopeMonogram}
+              formatDate={formatDate}
+            />
 
             {rsvp && (
               <div className="cover-guest-family-lower">
@@ -160,9 +156,10 @@ export function BohoRusticTemplate({
         )}
 
         <div className="boho-column-sheet">
-          {/* Bouquet floral Sea Glass en la esquina superior izquierda */}
+          {/* Esquinas florales botánicas Sea Glass en ambas esquinas superiores */}
           <div className="boho-top-floral-wrap" aria-hidden="true">
-            <img src={seaGlassTopLeft} alt="" className="boho-corner-img" />
+            <img src={seaGlassTopLeft} alt="" className="boho-corner-img boho-corner-left" />
+            <img src={seaGlassTopRight} alt="" className="boho-corner-img boho-corner-right" />
           </div>
 
           {/* Versículo bíblico / Cita de amor dinámica */}
@@ -195,6 +192,11 @@ export function BohoRusticTemplate({
             <p className="boho-we-marry-text">¡NOS CASAMOS!</p>
           </section>
 
+          {/* Separador floral botánico Sea Glass */}
+          <div className="boho-section-floral-divider" aria-hidden="true">
+            <img src={seaGlassDividerCluster} alt="" />
+          </div>
+
           {/* Reproductor de música inline con diseño fiel al requerimiento */}
           {audio && (
             <WeddingMusicPlayer
@@ -212,6 +214,11 @@ export function BohoRusticTemplate({
               </div>
             </section>
           )}
+
+          {/* Separador floral botánico Sea Glass */}
+          <div className="boho-section-floral-divider" aria-hidden="true">
+            <img src={seaGlassDividerCluster} alt="" />
+          </div>
 
           {/* Bendición de los padres y padrinos */}
           {hasFamilyBlessing && (
@@ -247,6 +254,11 @@ export function BohoRusticTemplate({
               </div>
             </section>
           )}
+
+          {/* Separador floral botánico Sea Glass */}
+          <div className="boho-section-floral-divider" aria-hidden="true">
+            <img src={seaGlassDividerCluster} alt="" />
+          </div>
 
           {/* Sección Nosotros: Nombres caligráficos y ramillete lateral Sea Glass */}
           <section className="boho-couple-hero-section">
@@ -359,6 +371,11 @@ export function BohoRusticTemplate({
             </article>
           </section>
 
+          {/* Separador floral botánico Sea Glass */}
+          <div className="boho-section-floral-divider" aria-hidden="true">
+            <img src={seaGlassDividerCluster} alt="" />
+          </div>
+
           {/* AGENDA DE ACTIVIDADES: Solo se muestran los ítems configurados en el panel de novios */}
           {invitation.showSchedule !== false && schedule.length > 0 && (
             <section className="boho-itinerary-section">
@@ -388,6 +405,11 @@ export function BohoRusticTemplate({
               </div>
             </div>
           )}
+
+          {/* Separador floral botánico Sea Glass */}
+          <div className="boho-section-floral-divider" aria-hidden="true">
+            <img src={seaGlassDividerCluster} alt="" />
+          </div>
 
           {/* Código de Vestimenta: Imagen oficial de novios o ilustración formal en blanco y negro */}
           {invitation.showDressCode !== false && (
@@ -427,6 +449,11 @@ export function BohoRusticTemplate({
               </p>
             </section>
           )}
+
+          {/* Separador floral botánico Sea Glass */}
+          <div className="boho-section-floral-divider" aria-hidden="true">
+            <img src={seaGlassDividerCluster} alt="" />
+          </div>
 
           {/* Sugerencia de Regalos */}
           {invitation.showGiftRegistry !== false && (giftOptions.length > 0 || invitation.giftRegistryUrl) && (
@@ -470,6 +497,11 @@ export function BohoRusticTemplate({
               </div>
             </section>
           )}
+
+          {/* Separador floral botánico Sea Glass */}
+          <div className="boho-section-floral-divider" aria-hidden="true">
+            <img src={seaGlassDividerCluster} alt="" />
+          </div>
 
           {/* Confirmar Asistencia (RSVP) */}
           <section className="boho-rsvp-section">
@@ -575,6 +607,12 @@ export function BohoRusticTemplate({
               </div>
             </div>
           )}
+
+          {/* Marco botánico Sea Glass en las esquinas inferiores para cerrar la invitación con elegancia */}
+          <div className="boho-bottom-floral-wrap" aria-hidden="true">
+            <img src={seaGlassBottomLeft} alt="" className="boho-corner-img boho-corner-bl" />
+            <img src={seaGlassBottomRight} alt="" className="boho-corner-img boho-corner-br" />
+          </div>
         </div>
       </div>
     </div>

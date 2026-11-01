@@ -183,7 +183,7 @@ function PersonalizedInvitationPage() {
         // Reproducción de audio en dispositivos móviles sujeta a interacción del usuario
       }
     }
-    window.setTimeout(() => setIsOpened(true), 620)
+    window.setTimeout(() => setIsOpened(true), 2800)
   }
 
   if (loading) return <main className="status-screen">Cargando tu invitación...</main>
